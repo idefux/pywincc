@@ -209,7 +209,7 @@ def time_test(time):
 @click.option('--database', '-d', default='', help='Initial Database (Catalog).')
 @click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
 @click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
-@click.option('--state', type=click.STRING, help="State condition e.g. '=2' or '>1'")
+@click.option('--state', default='',type=click.STRING, help="State condition e.g. '=2' or '>1'")
 def alarms(begin_time, end_time, text, host, database, utc, show, state):
     # if database is not set, try to fetch it's name
     # Connect to host with SQLOLEDB Provider

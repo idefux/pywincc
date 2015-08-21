@@ -23,7 +23,7 @@ def query_builder(begin_time, end_time, msg_text, utc, state):
         #print(type(msg_text))
         #query += u" AND Text1 LIKE '%{text}%'".format(text=msg_text.decode("iso-8859-1"))
         query += u" AND Text1 LIKE '%{text}%'".format(text=msg_text)
-        
+     
     if state != '':
         query += u" AND State {state_condition}".format(state_condition=state)
     
