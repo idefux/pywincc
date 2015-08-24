@@ -11,7 +11,7 @@ def datetime_to_str_without_ms(dt):
 
 def str_to_datetime(dt_str):
     """Convert strings of type "2015-08-21", "2015-08-21 10:23:25" and "2015-08-21 10:23:48.672" to datetime object"""
-    print("Trying to convert {dt} to UTC".format(dt=dt_str))
+    #print("Trying to convert {dt} to UTC".format(dt=dt_str))
     try:
         t = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:

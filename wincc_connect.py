@@ -154,10 +154,11 @@ database:        Print currently opened database
 @click.option('--mode', '-m', default='first', help="Optional mode. Can be first, last, min, max, avg, sum, count, and every mode with an '_interpolated' appended e.g. first_interpolated.")
 @click.option('--host', '-h', prompt=True, help='Hostname')
 @click.option('--database', '-d', default='', help='Initial Database (Catalog).')
-def tag(tagid, begin_time, end_time, timestep, mode, host, database):
+@click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
+def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc):
     """Parse user friendly tag query and assemble userunfriendly wincc query""" 
     
-    query = wincc_tag.query_builder(tagid, begin_time, end_time, timestep, mode)
+    query = wincc_tag.query_builder(tagid, begin_time, end_time, timestep, mode, utc)
     print(query)
     
     # if database is not set, try to fetch it's name
@@ -192,6 +193,7 @@ def get_wincc_runtime_database(host):
     wincc = wincc_mssql_connection(host, '')
     wincc.connect()
     wincc.select_wincc_runtime_database()
+    wincc.fetch_database_names()
     database = wincc.wincc_runtime_database
     wincc.close_connection()
     return database
