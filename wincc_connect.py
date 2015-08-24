@@ -7,8 +7,11 @@ import tag as wincc_tag
 import alarm as wincc_alarm
 
 from helper import local_time_to_utc, datetime_to_str
+from tag import print_tag_logging
 
 class StringCP1252ParamType(click.ParamType):
+    """String Param Type for click to curb with annoying windows cmd shell encoding problems.
+    German Umlaute are not correctly read from cmd line if Parameter Type is click.String"""
     name = 'text'
 
     def convert(self, value, param, ctx):
@@ -161,6 +164,8 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc):
     query = wincc_tag.query_builder(tagid, begin_time, end_time, timestep, mode, utc)
     print(query)
     
+    time_start = time.time()
+    
     # if database is not set, try to fetch it's name
     # Connect to host with SQLOLEDB Provider
     if database == '':
@@ -181,8 +186,13 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc):
         
         # Print results   
         if wincc.c_wincc.rowcount > 0:
-            for rec in wincc.c_wincc.fetchall():
-                print rec
+            print_tag_logging(wincc.c_wincc.fetchall())
+            #for rec in wincc.c_wincc.fetchall():
+            #    print rec
+        
+        time_elapsed = time.time() - time_start
+        print("Fetched data in {time}.".format(time=time_elapsed))
+        
     except Exception as e:
         print(e)
         print(traceback.format_exc())  
@@ -192,9 +202,18 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc):
 def get_wincc_runtime_database(host):
     wincc = wincc_mssql_connection(host, '')
     wincc.connect()
-    wincc.select_wincc_runtime_database()
     wincc.fetch_database_names()
+    wincc.select_wincc_runtime_database()    
     database = wincc.wincc_runtime_database
+    wincc.close_connection()
+    return database
+
+def get_wincc_config_database(host):
+    wincc = wincc_mssql_connection(host, '')
+    wincc.connect()
+    wincc.fetch_database_names()
+    wincc.select_wincc_config_database()    
+    database = wincc.wincc_config_database
     wincc.close_connection()
     return database
 
@@ -241,6 +260,32 @@ def alarms(begin_time, end_time, text, host, database, utc, show, state):
                 print(traceback.format_exc()) 
         finally:
             wincc.close_connection()
+            
+            
+@cli.command()
+@click.argument('name')
+@click.option('--host', '-h', prompt=True, help='Hostname')
+@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
+def tagid_by_name(name, host, database):
+    if database == '':
+        try:
+            print("Database not given. Trying to read it from server.")
+            database = get_wincc_config_database(host)
+        except Exception as e:
+            print(e)
+            print(traceback.format_exc())
+    try:
+        wincc = wincc_mssql_connection(host, database)
+        wincc.connect()
+        wincc.execute_cmd("SELECT TLGTAGID, VARNAME FROM PDE#TAGs WHERE VARNAME LIKE '%{name}%'".format(name=name))
+        if wincc.c.rowcount > 0:
+            for rec in wincc.c.fetchall():
+                print rec
+        
+    except Exception as e:
+        print(e)
+    finally:
+        wincc.close_connection()
     
 
 if __name__ == "__main__":
