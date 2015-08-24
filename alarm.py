@@ -20,10 +20,7 @@ def query_builder(begin_time, end_time, msg_text, utc, state):
     u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE DateTime > '2015-08-24 08:07:48' AND Text1 LIKE '%Trogkettenf%'"
     
     >>> query_builder("2015-08-24 10:07:48", '', '', False, '>2')
-    u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE DateTime > '2015-08-24 08:07:48' AND State >2"
-    
-    No relative time statements at alarms
-    
+    u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE DateTime > '2015-08-24 08:07:48' AND State >2"    
     """    
     
     dt_begin_time = str_to_datetime(begin_time)

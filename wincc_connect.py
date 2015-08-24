@@ -124,7 +124,7 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc):
             print(traceback.format_exc()) 
         
     try:    
-        # Conenct to WinCC Database
+        # Connect to WinCC Database
         wincc = wincc_mssql_connection(host, database)        
         wincc.connect_winccoledbprovider()
         
