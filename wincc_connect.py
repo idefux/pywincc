@@ -1,6 +1,7 @@
 import click
 import time
 import traceback
+from interactive import interactive_mode_wincc
 
 from wincc_mssql_connection import wincc_mssql_connection, WinCCException
 import tag as wincc_tag
@@ -93,61 +94,7 @@ database:        Print currently opened database
     except WinCCException as e:
         print('Connection to host failed. Quitting program. Bye.')    
     finally:    # disconnect
-        wincc.close_connection()  
-
-def interactive_mode_wincc(host, database):
-    """Provides a shell for the user to interactively query the SQL server"""
-    #special_user_commands = ['help', 'exit', 'databases', 'tables', 'database']
-    help_text =  """Interactive mode with WinCCOLEDBProvider.1
-exit:        Disconnect from server and quit program    
-help:        Print this help text
-tables:        Print table names of current databases
-databases:    Print database names
-database:        Print currently opened database
-    """
-    exit_message = "Disconnecting from server. Quitting interactive mode. Bye!"
-    special_commands = {
-                        'help': 'print(help_text)',
-                        'exit': 'print(exit_message)\nloop=False',
-                        'databases': 'wincc.fetch_database_names()\nwincc.print_database_names()',
-                        'tables': 'wincc.print_table_names()',
-                        'database': 'wincc.fetch_current_database_name()\nwincc.print_current_database_name()',
-                        'alarms': 'wincc.fetch_alarms(user_input.split(" ")[1])\nwincc.print_alarms()',
-                        'operator_messages': 'wincc.fetch_operator_messages(user_input.split(" ")[1])\nwincc.print_operator_messages()'
-                        }
-    
-    # establish server connection
-    try:
-        wincc = wincc_mssql_connection(host, database)
-        wincc.connect_winccoledbprovider()
-
-        # fire SQL queries until user stops
-        loop = True
-        while loop:
-            try:
-                user_input = raw_input('Enter SQL command: ')
-                user_input_cmd = user_input.split(" ")[0]
-                time_start = time.time()
-                if user_input_cmd == 'tag':
-                    print("Not implemented yet")
-                elif user_input_cmd not in special_commands:                    
-                    wincc.execute_cmd_wincc(user_input)
-                    if wincc.c_wincc.rowcount > 0:
-                        for rec in wincc.c_wincc.fetchall():
-                            print(unicode(rec))                    
-                else:
-                    #print("exec: " + special_commands[user_input_cmd])
-                    exec(special_commands[user_input_cmd])
-                time_elapsed = time.time() - time_start
-                print("Fetched data in {time}.".format(time=time_elapsed))
-            except Exception as e:
-                print(e)
-                print(traceback.format_exc())        
-    except WinCCException as e:
-        print('Connection to host failed. Quitting program. Bye.')    
-    finally:    # disconnect
-        wincc.close_connection() 
-            
+        wincc.close_connection()              
 
 @cli.command()
 @click.argument('tagid')
