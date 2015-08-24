@@ -138,7 +138,7 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc):
             #    print rec
         
         time_elapsed = time.time() - time_start
-        print("Fetched data in {time}.".format(time=time_elapsed))
+        print("Fetched data in {time}.".format(time=round(time_elapsed, 3)))
         
     except Exception as e:
         print(e)
@@ -201,7 +201,7 @@ def alarms(begin_time, end_time, text, host, database, utc, show, state):
             wincc.execute_cmd_wincc(query)
             wincc.print_alarms()
             time_elapsed = time.time() - time_start
-            print("Fetched data in {time}.".format(time=time_elapsed))    
+            print("Fetched data in {time}.".format(time=round(time_elapsed,3)))    
         except Exception as e:
                 print(e)
                 print(traceback.format_exc()) 

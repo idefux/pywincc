@@ -29,7 +29,7 @@ def alarms_cmd(wincc, args):
         state = ''
     
     query = query_builder(begin_time, end_time, msg_text, True, state)
-    print query
+    
     try:
         wincc.execute_cmd_wincc(query)
         wincc.print_alarms() 
@@ -87,7 +87,7 @@ alarms:        Usage: alarms begin_time [end_time [text [state]]]
                     print("exec: " + special_commands[user_input_cmd])
                     exec(special_commands[user_input_cmd])
                 time_elapsed = time.time() - time_start
-                print("Fetched data in {time}.".format(time=time_elapsed))
+                print("Fetched data in {time}.".format(time=round(time_elapsed, 3)))
             except Exception as e:
                 print(e)
                 print(traceback.format_exc())        
