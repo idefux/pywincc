@@ -2,7 +2,8 @@ import shlex
 import traceback
 import time
 from wincc_mssql_connection import wincc_mssql_connection, WinCCException
-from alarm import query_builder
+from alarm import alarm_query_builder
+from operator_messages import om_query_builder
 
 def alarms_cmd(wincc, args):
     """Parse alarm args and call wincc.fetch_alarms() method"""
@@ -28,7 +29,7 @@ def alarms_cmd(wincc, args):
     else:
         state = ''
     
-    query = query_builder(begin_time, end_time, msg_text, True, state)
+    query = alarm_query_builder(begin_time, end_time, msg_text, False, state)
     
     try:
         wincc.execute_cmd_wincc(query)
@@ -36,6 +37,34 @@ def alarms_cmd(wincc, args):
     except Exception as e:
         print(e)
         print(traceback.format_exc())     
+    
+def operator_messages_cmd(wincc, args):
+    """Parse operator message args and call wincc.fetch_operator_messages() method"""
+    
+    if len(args) < 1:
+        print("Unsufficient arguments")
+        return
+    
+    begin_time = args[0]
+    
+    if len(args) >= 2:
+        end_time = args[1]
+    else:
+        end_time = ''
+        
+    if len(args) >= 3:
+        msg_text = args[2]
+    else:
+        msg_text = ''
+        
+    query = om_query_builder(begin_time, end_time, msg_text, False) 
+    
+    try:
+        wincc.execute_cmd_wincc(query)
+        wincc.print_operator_messages() 
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
     
 
 def interactive_mode_wincc(host, database):
@@ -48,6 +77,7 @@ tables:        Print table names of current databases
 databases:    Print database names
 database:        Print currently opened database
 alarms:        Usage: alarms begin_time [end_time [text [state]]]
+operator_messages:    Usage: operator_messages begin_time [end_time [text]]
     """
     exit_message = "Disconnecting from server. Quitting interactive mode. Bye!"
     special_commands = {
@@ -58,7 +88,8 @@ alarms:        Usage: alarms begin_time [end_time [text [state]]]
                         'database': 'wincc.fetch_current_database_name()\nwincc.print_current_database_name()',
                         #'alarms': 'wincc.fetch_alarms(user_input.split(" ")[1])\nwincc.print_alarms()',
                         'alarms': 'alarms_cmd(wincc, user_input_args)',
-                        'operator_messages': 'wincc.fetch_operator_messages(user_input.split(" ")[1])\nwincc.print_operator_messages()'
+                        #'operator_messages': 'wincc.fetch_operator_messages(user_input.split(" ")[1])\nwincc.print_operator_messages()'
+                        'operator_messages': 'operator_messages_cmd(wincc, user_input_args)'
                         }
     
     # establish server connection
@@ -84,7 +115,7 @@ alarms:        Usage: alarms begin_time [end_time [text [state]]]
                         for rec in wincc.c_wincc.fetchall():
                             print(unicode(rec))                    
                 else:
-                    print("exec: " + special_commands[user_input_cmd])
+                    #print("exec: " + special_commands[user_input_cmd])
                     exec(special_commands[user_input_cmd])
                 time_elapsed = time.time() - time_start
                 print("Fetched data in {time}.".format(time=round(time_elapsed, 3)))

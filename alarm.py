@@ -4,22 +4,22 @@
 from helper import local_time_to_utc, datetime_to_str_without_ms,\
     str_to_datetime
 
-def query_builder(begin_time, end_time, msg_text, utc, state):
+def alarm_query_builder(begin_time, end_time, msg_text, utc, state):
     """Build wincc alarm query string
     
-    >>> query_builder("2015-08-24 10:07:48", "2015-08-24 10:08:12", '', False, '')
+    >>> alarm_query_builder("2015-08-24 10:07:48", "2015-08-24 10:08:12", '', False, '')
     u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE DateTime > '2015-08-24 08:07:48' AND DateTime < '2015-08-24 08:08:12'"
     
-    >>> query_builder("2015-08-24 10:07:48", "2015-08-24 10:08:12", '', True, '')
+    >>> alarm_query_builder("2015-08-24 10:07:48", "2015-08-24 10:08:12", '', True, '')
     u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE DateTime > '2015-08-24 10:07:48' AND DateTime < '2015-08-24 10:08:12'"
     
-    >>> query_builder("2015-08-24 10:07:48", '', '', False, '')
+    >>> alarm_query_builder("2015-08-24 10:07:48", '', '', False, '')
     u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE DateTime > '2015-08-24 08:07:48'"
     
-    >>> query_builder("2015-08-24 10:07:48", '', 'Trogkettenf', False, '')
+    >>> alarm_query_builder("2015-08-24 10:07:48", '', 'Trogkettenf', False, '')
     u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE DateTime > '2015-08-24 08:07:48' AND Text1 LIKE '%Trogkettenf%'"
     
-    >>> query_builder("2015-08-24 10:07:48", '', '', False, '>2')
+    >>> alarm_query_builder("2015-08-24 10:07:48", '', '', False, '>2')
     u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE DateTime > '2015-08-24 08:07:48' AND State >2"    
     """    
     

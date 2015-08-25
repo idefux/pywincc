@@ -2,7 +2,7 @@
 from helper import datetime_to_str, str_to_datetime, local_time_to_utc,\
     utc_to_local_time
 
-def query_builder(tagid, begin_time, end_time, timestep, mode, utc):
+def query_builder(tagids, begin_time, end_time, timestep, mode, utc):
     """Build the WinCC query string for reading tags
     
     >>> query_builder(132, "2015-08-24 10:48:10", "2015-08-24 10:49:24", 3600, 'sum', False)
@@ -19,15 +19,23 @@ def query_builder(tagid, begin_time, end_time, timestep, mode, utc):
         return False
     
     mode_num = mode_dict[mode]
+
+    if len(tagids) == 1:
+        query = "TAG:R,{tagid}".format(tagid=tagids[0])
+    else:
+        query = "TAG:R,("
+        for tagid in tagids:
+            query += "{tagid};".format(tagid=tagid)
+        query = query[0:-1] + ")"
     
     if begin_time[0:4] == '0000': 
         #relative time
-        query = "TAG:R,{tagid},'{begin_time}'".format(tagid=tagid, begin_time=begin_time)
+        query += ",'{begin_time}'".format(begin_time=begin_time)
     else:
         dt_begin_time = str_to_datetime(begin_time)
         if not utc:        
             dt_begin_time = local_time_to_utc(dt_begin_time)
-        query = "TAG:R,{tagid},'{begin_time}'".format(tagid=tagid, begin_time=datetime_to_str(dt_begin_time))
+        query += ",'{begin_time}'".format(tagid=tagid, begin_time=datetime_to_str(dt_begin_time))
     
     if end_time != '':
         if end_time[0:4] == '0000':            
@@ -50,7 +58,8 @@ def print_tag_logging(records):
     '2015-08-23 14:47:54.000': 29.654.
     """
     for rec in records:
-        print("'{datetime}': {value}.".format(datetime=datetime_to_str(utc_to_local_time(str_to_datetime(rec[1]))), value=rec[2]))
+        print("{tagid}, {datetime}: {value}.".format(tagid=rec[0], datetime=datetime_to_str(utc_to_local_time(str_to_datetime(rec[1]))), value=rec[2]))
+        #print rec
 
 if __name__ == "__main__":
     import doctest
