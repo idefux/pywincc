@@ -105,6 +105,11 @@ class wincc_mssql_connection():
             if self.c.rowcount > 0:
                 for rec in self.c.fetchall():
                     self.databases.append(rec[0]) 
+            else:
+                self.c.execute("SELECT name FROM sys.databases")
+                if self.c.rowcount > 0:
+                    for rec in self.c.fetchall():
+                        self.databases.append(rec[0])
         except Exception as e:
             print("Could not retrieve database list")
             print(e)
