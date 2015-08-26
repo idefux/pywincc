@@ -1,10 +1,14 @@
 import click
 import time
 import traceback
-from interactive import interactive_mode_wincc
+import logging
 
-from wincc_mssql_connection import wincc_mssql_connection, WinCCException
-import tag as wincc_tag
+from interactive import InteractiveModeWinCC, InteractiveMode
+
+#from wincc_mssql_connection import wincc_mssql_connection, WinCCException
+from wincc import wincc, WinCCException
+from mssql import mssql, MsSQLException
+from tag import tag_query_builder
 from alarm import alarm_query_builder
 
 from helper import local_time_to_utc, datetime_to_str
@@ -28,15 +32,10 @@ class StringCP1252ParamType(click.ParamType):
 STRING_CP1252 = StringCP1252ParamType()
 
 @click.group()
-#@click.option('--host', default='127.0.0.1', help='Hostname')
-#@click.option('--database', default='', help='Initial Database (Catalog).')
-#@click.option('--interactive', default=False, is_flag=True, help='Interactive mode. Fire queries manually.')
-#@click.option('--tables', default=False, is_flag=True, help='List table names in given database.')
 @click.option('--debug', default=False, is_flag=True, help='Turn on debug mode. Will print some debug messages.')
-#@click.option('--wincc-provider', '-w', default=False, is_flag=True, help='Use WinCCOLEDBProvider.1 instead of SQLOLEDB.1')
 def cli(debug):
     if debug:
-        print("Debug mode not implemented yet.")
+        logging.basicConfig(level=logging.DEBUG)
         #print('host: ' + host)
         #print('database: ' + database)
         #print('interactive: ' + str(interactive))
@@ -50,9 +49,12 @@ def cli(debug):
 @click.option('--wincc-provider', '-w', default=False, is_flag=True, help='Use WinCCOLEDBProvider.1 instead of SQLOLEDB.1')
 def interactive(host, database, wincc_provider):
     if wincc_provider:
-        interactive_mode_wincc(host, database)
+        #interactive_mode_wincc(host, database)
+        shell = InteractiveModeWinCC(host, database)
+        shell.run()
     else:
-        interactive_mode_oledb(host, database)
+        shell = InteractiveMode(host, database)
+        shell.run()
 
 def interactive_mode_oledb(host, database):
     """Provides a shell for the user to interactively query the SQL server"""
@@ -74,8 +76,8 @@ database:        Print currently opened database
     
     # establish server connection
     try:
-        wincc = wincc_mssql_connection(host, database)
-        wincc.connect()
+        m = mssql(host, database)
+        m.connect()
 
         # fire SQL queries until user stops
         loop = True
@@ -83,18 +85,18 @@ database:        Print currently opened database
             try:
                 user_command = raw_input('Enter SQL command: ')
                 if user_command not in special_commands:
-                    wincc.execute_cmd(user_command)
-                    if wincc.c.rowcount > 0:
-                        for rec in wincc.c.fetchall():
+                    m.execute(user_command)
+                    if m.rowcount():
+                        for rec in m.fetchall():
                             print(unicode(rec))
                 else:
                     exec(special_commands[user_command])
             except Exception as e:
                 print(e)        
-    except WinCCException as e:
+    except MsSQLException as e:
         print('Connection to host failed. Quitting program. Bye.')    
     finally:    # disconnect
-        wincc.close_connection()              
+        m.close()              
 
 @cli.command()
 @click.argument('tagid', nargs=-1)
@@ -109,35 +111,21 @@ database:        Print currently opened database
 def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc, show):
     """Parse user friendly tag query and assemble userunfriendly wincc query""" 
     
-    query = wincc_tag.query_builder(tagid, begin_time, end_time, timestep, mode, utc)
+    query = tag_query_builder(tagid, begin_time, end_time, timestep, mode, utc)
     if show:
         print(query)
         return
     
     time_start = time.time()
-    
-    # if database is not set, try to fetch it's name
-    # Connect to host with SQLOLEDB Provider
-    if database == '':
-        try:
-            print("Database not given. Trying to read it from server.")
-            get_wincc_runtime_database(host)
-        except Exception as e:
-            print(e)
-            print(traceback.format_exc()) 
-        
+            
     try:    
-        # Connect to WinCC Database
-        wincc = wincc_mssql_connection(host, database)        
-        wincc.connect_winccoledbprovider()
+        w = wincc(host, database)        
+        w.connect()
+        w.execute(query)
         
-        # Execute query
-        wincc.execute_cmd_wincc(query)
-        
-        # Print results   
-        if wincc.c_wincc.rowcount > 0:
-            print_tag_logging(wincc.c_wincc.fetchall())
-            #for rec in wincc.c_wincc.fetchall():
+        if w.rowcount():
+            print_tag_logging(w.fetchall())
+            #for rec in w.fetchall():
             #    print rec
         
         time_elapsed = time.time() - time_start
@@ -147,30 +135,30 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc, show):
         print(e)
         print(traceback.format_exc())  
     
-    wincc.close_connection()
+    w.close()
 
-def get_wincc_runtime_database(host):
-    wincc = wincc_mssql_connection(host, '')
-    wincc.connect()
-    wincc.fetch_database_names()
-    wincc.select_wincc_runtime_database()    
-    database = wincc.wincc_runtime_database
-    wincc.close_connection()
-    return database
+#def get_wincc_runtime_database(host):
+#    mssql = mssql(host, '')
+#    mssql.connect()
+#    mssql.fetch_database_names()
+#    wincc.select_wincc_runtime_database()    
+#    database = wincc.wincc_runtime_database
+#    wincc.close_connection()
+#    return database
 
-def get_wincc_config_database(host):
-    wincc = wincc_mssql_connection(host, '')
-    wincc.connect()
-    wincc.fetch_database_names()
-    wincc.select_wincc_config_database()    
-    database = wincc.wincc_config_database
-    wincc.close_connection()
-    return database
+#def get_wincc_config_database(host):
+#    wincc = wincc_mssql_connection(host, '')
+#    wincc.connect()
+#    wincc.fetch_database_names()
+#    wincc.select_wincc_config_database()    
+#    database = wincc.wincc_config_database
+#    wincc.close_connection()
+#    return database
 
-@cli.command()
-@click.argument('time')
-def time_test(time):
-    print datetime_to_str(local_time_to_utc(time))
+#@cli.command()
+#@click.argument('time')
+#def time_test(time):
+#    print datetime_to_str(local_time_to_utc(time))
 
 @cli.command()
 @click.argument('begin_time')
@@ -182,34 +170,24 @@ def time_test(time):
 @click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
 @click.option('--state', default='',type=click.STRING, help="State condition e.g. '=2' or '>1'")
 def alarms(begin_time, end_time, text, host, database, utc, show, state):
-    # if database is not set, try to fetch it's name
-    # Connect to host with SQLOLEDB Provider
-    if database == '':
-        try:
-            print("Database not given. Trying to read it from server.")
-            database = get_wincc_runtime_database(host)
-        except Exception as e:
-            print(e)
-            print(traceback.format_exc()) 
             
-    #wincc.fetch_alarms(user_input.split(" ")[1])\nwincc.print_alarms()
-    query = alarm_query_builder(begin_time, end_time, text, utc, state)
-        
+    query = alarm_query_builder(begin_time, end_time, text, utc, state)        
     print(query)
+    
     if not show:
         try:
             time_start = time.time()
-            wincc = wincc_mssql_connection(host, database)
-            wincc.connect_winccoledbprovider()
-            wincc.execute_cmd_wincc(query)
-            wincc.print_alarms()
+            w = wincc(host, database)
+            w.connect()
+            w.execute(query)
+            w.print_alarms()
             time_elapsed = time.time() - time_start
             print("Fetched data in {time}.".format(time=round(time_elapsed,3)))    
-        except Exception as e:
+        except WinCCException as e:
                 print(e)
                 print(traceback.format_exc()) 
         finally:
-            wincc.close_connection()
+            w.close()
             
             
 @cli.command()
@@ -220,23 +198,34 @@ def tagid_by_name(name, host, database):
     if database == '':
         try:
             print("Database not given. Trying to read it from server.")
-            database = get_wincc_config_database(host)
+            w = wincc(host, database)
+            database = w.fetch_wincc_config_database_name()
+            w.close()
         except Exception as e:
             print(e)
             print(traceback.format_exc())
     try:
-        wincc = wincc_mssql_connection(host, database)
-        wincc.connect()
-        wincc.execute_cmd("SELECT TLGTAGID, VARNAME FROM PDE#TAGs WHERE VARNAME LIKE '%{name}%'".format(name=name))
-        if wincc.c.rowcount > 0:
-            for rec in wincc.c.fetchall():
-                print rec
-        
+        w = wincc(host, database)
+        w.connect()
+        w.execute("SELECT TLGTAGID, VARNAME FROM PDE#TAGs WHERE VARNAME LIKE '%{name}%'".format(name=name))
+        if w.rowcount():
+            for rec in w.fetchall():
+                print rec        
     except Exception as e:
         print(e)
     finally:
-        wincc.close_connection()
+        w.close()
     
+
+#@cli.command()
+#@click.argument('begin_time')
+#@click.argument('end_time')
+#@click.option('--host', '-h', prompt=True, help='Hostname')
+#@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
+#def report(begin_time, end_time, host, database):
+
+#    print alarm_report(begin_time, end_time, )
+
 
 if __name__ == "__main__":
     cli()

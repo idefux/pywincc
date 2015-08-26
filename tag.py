@@ -2,10 +2,10 @@
 from helper import datetime_to_str, str_to_datetime, local_time_to_utc,\
     utc_to_local_time
 
-def query_builder(tagids, begin_time, end_time, timestep, mode, utc):
+def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):
     """Build the WinCC query string for reading tags
     
-    >>> query_builder(132, "2015-08-24 10:48:10", "2015-08-24 10:49:24", 3600, 'sum', False)
+    >>> tag_query_builder(132, "2015-08-24 10:48:10", "2015-08-24 10:49:24", 3600, 'sum', False)
     "TAG:R,132,'2015-08-24 08:48:10.000','2015-08-24 08:49:24.000','TIMESTEP=3600,6'"
     
     """
@@ -35,7 +35,7 @@ def query_builder(tagids, begin_time, end_time, timestep, mode, utc):
         dt_begin_time = str_to_datetime(begin_time)
         if not utc:        
             dt_begin_time = local_time_to_utc(dt_begin_time)
-        query += ",'{begin_time}'".format(tagid=tagid, begin_time=datetime_to_str(dt_begin_time))
+        query += ",'{begin_time}'".format(begin_time=datetime_to_str(dt_begin_time))
     
     if end_time != '':
         if end_time[0:4] == '0000':            

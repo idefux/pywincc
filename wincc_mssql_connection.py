@@ -71,17 +71,7 @@ class wincc_mssql_connection():
             print(e)
             self.connection_established = False
             raise WinCCException(message='Connection to host {host} failed.'.format(host=self.host))
-
-    def fetch_current_database_name(self):
-        self.execute_cmd("SELECT DB_NAME();")
-        self.current_database = self.c.fetchone()[0]
-    
-    def print_current_database_name(self):
-        print("Database currently open: {database}".format(database = self.current_database))
-    
-    def set_current_database(self):
-        self.current_database = self.fetch_current_database_name()
-    
+        
     def execute_cmd(self, cmd):
         try:
             self.c.execute(cmd)
@@ -96,45 +86,8 @@ class wincc_mssql_connection():
             self.c_wincc.execute(cmd)
         except Exception as e:
             print("Execute of cmd {cmd} failed.".format(cmd=cmd))            
-            print e
-    
-    def fetch_database_names(self):
-        print("Fetching database names from host {host}".format(host=self.host))
-        try:
-            self.c.execute("EXEC sp_databases;")
-            if self.c.rowcount > 0:
-                for rec in self.c.fetchall():
-                    self.databases.append(rec[0]) 
-            else:
-                self.c.execute("SELECT name FROM sys.databases")
-                if self.c.rowcount > 0:
-                    for rec in self.c.fetchall():
-                        self.databases.append(rec[0])
-        except Exception as e:
-            print("Could not retrieve database list")
-            print(e)
-            
-    def print_database_names(self):
-        for db in self.databases:
-            print(db)
-    
-    def print_table_names(self):
-        print("Fetching table names from host '{host}' database '{database}'.".format(host=self.host, database=self.current_database))
-        self.execute_cmd("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES ORDER BY TABLE_NAME")
-        for rec in self.c.fetchall():
-            print rec         
+            print e 
         
-    def close_connection(self):
-        self.connection_established = False
-        self.connection_status_text = 'Connection closed.'
-        if self.c:
-            self.c.close()
-        if self.conn:
-            self.conn.close()
-        if self.c_wincc:
-            self.c_wincc.close()
-        if self.conn_wincc:
-            self.conn_wincc.close()
         
     def select_wincc_config_database(self):
         r = re.compile(r"CC_OS_[\d_]+$")
