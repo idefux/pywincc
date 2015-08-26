@@ -11,21 +11,21 @@ def datetime_to_str_without_ms(dt):
 
 def str_to_datetime(dt_str):
     """Convert strings of type "2015-08-21", "2015-08-21 10:23:25", "2015-08-26 07:47" and "2015-08-21 10:23:48.672" to datetime object
-    
+
     Examples:
-    
+
     >>> str_to_datetime("2015-08-21")
     datetime.datetime(2015, 8, 21, 0, 0)
-    
+
     >>> str_to_datetime("2015-08-21 10:23:25")
     datetime.datetime(2015, 8, 21, 10, 23, 25)
-    
+
     >>> str_to_datetime("2015-08-26 07:47")
     datetime.datetime(2015, 8, 26, 7, 47)
-    
+
     >>> str_to_datetime("2015-08-21 10:23:48.672")
     datetime.datetime(2015, 8, 21, 10, 23, 48, 672000)
-    
+
     """
     if isinstance(dt_str, datetime):
         return dt_str
@@ -40,10 +40,10 @@ def str_to_datetime(dt_str):
             except ValueError:
                 try:
                     t = datetime.strptime(dt_str, '%Y-%m-%d')
-                except:
+                except ValueError:
                     print("Could not parse datetime {dt}".format(dt=dt_str))
                     return None
-    return t 
+    return t
 
 def local_time_to_utc(dt_in):
     """Expects a datetime or str object in local time and transforms it to UTC"""
@@ -54,19 +54,19 @@ def local_time_to_utc(dt_in):
     else:
         #datetime
         dt = dt_in
-    
+
     from_zone = tz.tzlocal()
     to_zone = tz.gettz('UTC')
-               
+
     local_time = dt.replace(tzinfo=from_zone)
     return local_time.astimezone(to_zone)
 
-def utc_to_local_time(t):    
+def utc_to_local_time(t):
     """ Expects a datetime object in utc timezone and transforms it to local timezone"""
     from_zone = tz.gettz('UTC')
-    to_zone = tz.tzlocal()        
-    #utc = datetime.strptime(t, '%Y-%m-%d %H:%M:%S')        
-    utc = t.replace(tzinfo=from_zone)        
+    to_zone = tz.tzlocal()
+    #utc = datetime.strptime(t, '%Y-%m-%d %H:%M:%S')
+    utc = t.replace(tzinfo=from_zone)
     return utc.astimezone(to_zone)
 
 if __name__ == "__main__":
