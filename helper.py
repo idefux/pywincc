@@ -10,8 +10,23 @@ def datetime_to_str_without_ms(dt):
     return datetime_to_str(dt)[0:-4]
 
 def str_to_datetime(dt_str):
-    """Convert strings of type "2015-08-21", "2015-08-21 10:23:25" and "2015-08-21 10:23:48.672" to datetime object"""
-    #print("Trying to convert {dt} to UTC".format(dt=dt_str))
+    """Convert strings of type "2015-08-21", "2015-08-21 10:23:25", "2015-08-26 07:47" and "2015-08-21 10:23:48.672" to datetime object
+    
+    Examples:
+    
+    >>> str_to_datetime("2015-08-21")
+    datetime.datetime(2015, 8, 21, 0, 0)
+    
+    >>> str_to_datetime("2015-08-21 10:23:25")
+    datetime.datetime(2015, 8, 21, 10, 23, 25)
+    
+    >>> str_to_datetime("2015-08-26 07:47")
+    datetime.datetime(2015, 8, 26, 7, 47)
+    
+    >>> str_to_datetime("2015-08-21 10:23:48.672")
+    datetime.datetime(2015, 8, 21, 10, 23, 48, 672000)
+    
+    """
     if isinstance(dt_str, datetime):
         return dt_str
     try:
@@ -21,10 +36,13 @@ def str_to_datetime(dt_str):
             t = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S')
         except ValueError:
             try:
-                t = datetime.strptime(dt_str, '%Y-%m-%d')
-            except:
-                print("Could not parse datetime {dt}".format(dt=dt_str))
-                return None
+                t = datetime.strptime(dt_str, '%Y-%m-%d %H:%M')
+            except ValueError:
+                try:
+                    t = datetime.strptime(dt_str, '%Y-%m-%d')
+                except:
+                    print("Could not parse datetime {dt}".format(dt=dt_str))
+                    return None
     return t 
 
 def local_time_to_utc(dt_in):
@@ -50,3 +68,7 @@ def utc_to_local_time(t):
     #utc = datetime.strptime(t, '%Y-%m-%d %H:%M:%S')        
     utc = t.replace(tzinfo=from_zone)        
     return utc.astimezone(to_zone)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
