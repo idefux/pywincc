@@ -1,8 +1,34 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
+from collections import namedtuple
 from helper import local_time_to_utc, datetime_to_str_without_ms,\
-    str_to_datetime
+    str_to_datetime, datetime_to_str, utc_to_local_time
+
+Alarm = namedtuple('Alarm', 'id state datetime classname priority text')
+
+class AlarmRecord():
+    def __init__(self):
+        self.alarms = []
+        
+    def push(self, alarm):
+        if isinstance(alarm, Alarm):
+            self.alarms.append(alarm)
+        else:
+            raise TypeError("AlarmRecord: Expected type 'Alarm'. Got type {type}.".format(type=type(alarm)))
+        
+    def __unicode__(self):
+        #return unicode([alarm for alarm in self.alarms])
+        output = "[\n"
+        for alarm in self.alarms:
+            output += unicode(alarm)
+            output += "\n"
+        output +="]"
+        return output
+    
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+        #return str([alarm for alarm in self.alarms])
+    
 
 def alarm_query_builder(begin_time, end_time, msg_text, utc, state):
     """Build wincc alarm query string

@@ -40,7 +40,9 @@ class InteractiveModeWinCC():
     
         try:
             self.wincc.execute(query)
-            self.wincc.print_alarms()
+            #self.wincc.print_alarms()
+            alarms = self.wincc.create_alarm_record()
+            print(alarms)
         except Exception as e:
             print(e)
             print(traceback.format_exc())     

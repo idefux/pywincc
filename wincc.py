@@ -154,7 +154,7 @@ class wincc(mssql):
         if self.rowcount():
             alarms = AlarmRecord()
             for rec in self.fetchall():
-                alarms.add(Alarm(rec['MsgNr'], rec['State'], datetime_to_str(utc_to_local_time(rec['DateTime'])), rec['Classname'], rec['Typename'], rec['Text1']))
+                alarms.push(Alarm(rec['MsgNr'], rec['State'], datetime_to_str(utc_to_local_time(rec['DateTime'])), rec['Classname'], rec['Typename'], rec['Text1']))
             return alarms
         return None
                 
