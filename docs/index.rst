@@ -11,7 +11,19 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-
+.. automodulename:: wincc
+.. autoclass:: wincc
+.. automodulename:: mssql
+.. autoclass:: mssql
+.. automodulename:: alarm
+.. automodulename:: tag
+.. automodulename:: operator_message
+.. automodulename:: helper
+.. automodulename:: interactive
+.. autoclass:: InteractiveModeWinCC
+.. autoclass:: InteractiveMode
+.. automodulename:: wincc_connect
+.. autoclass:: cli
 
 Indices and tables
 ==================
