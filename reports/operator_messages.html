@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+        <style>
+      table, td, tr, th { border: 1px solid grey; border-collapse: collapse; }
+      td { padding: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Operator Messages Report {{plant}}</h2>
+    <h3>{{begin_time}} - {{end_time}}</h3>
+          
+     <h4>Operator Messages</h4>
+     {{ operator_messages_log }}
+     
+     <h4>Total Number</h4>
+     {{ operator_messages_count }}
+</body>
+</html>
