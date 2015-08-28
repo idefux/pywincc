@@ -30,7 +30,7 @@ class wincc(mssql):
         Microsoft OLEDB Provider first. You can save some time by passing database name here.
         """
 
-        if not host.find('\WINCC'):
+        if host.find('\WINCC') == -1:
             host += '\WINCC'
             logging.info("Missing instance name at hostname. Appending \WINCC.")
         
