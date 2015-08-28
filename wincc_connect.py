@@ -2,12 +2,14 @@ import click
 import traceback
 import logging
 
-from wincc import wincc, WinCCException, do_alarm_report, do_batch_alarm_report, do_operator_messages_report
+from wincc import wincc, WinCCException, do_alarm_report,\
+do_batch_alarm_report, do_operator_messages_report
 from alarm import alarm_query_builder
 from tag import tag_query_builder, print_tag_logging
 from interactive import InteractiveModeWinCC, InteractiveMode
 from operator_messages import om_query_builder
 from helper import tic
+from report import generate_alarms_report
 
 
 class StringCP1252ParamType(click.ParamType):
@@ -18,7 +20,7 @@ class StringCP1252ParamType(click.ParamType):
     def convert(self, value, param, ctx):
         if isinstance(value, bytes):
             enc = 'cp1252'
-            value = value.decode(enc)            
+            value = value.decode(enc)
             return value
         return value
 
@@ -32,7 +34,6 @@ STRING_CP1252 = StringCP1252ParamType()
 def cli(debug):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
-        
 
 @cli.command()
 @click.option('--host', '-h', default='127.0.0.1', help='Hostname')
@@ -93,7 +94,9 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc, show):
 @click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
 @click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
 @click.option('--state', default='',type=click.STRING, help="State condition e.g. '=2' or '>1'")
-def alarms(begin_time, end_time, text, host, database, utc, show, state):
+@click.option('--report', '-r', default=False, is_flag=True, help="Print htmlalarm report")
+@click.option('--report-hostname', '-rh', default='', help="Host description to be printed on report.")
+def alarms(begin_time, end_time, text, host, database, utc, show, state, report, report_hostname):
             
     query = alarm_query_builder(begin_time, end_time, text, utc, state)        
     if show:
@@ -107,6 +110,13 @@ def alarms(begin_time, end_time, text, host, database, utc, show, state):
         w.execute(query)
         w.print_alarms()
         print("Fetched data in {time}.".format(time=round(toc(),3)))
+        if report:
+            alarms = w.create_alarm_record()
+            if report_hostname:
+                host_description = report_hostname
+            else:
+                host_description = host
+            generate_alarms_report(alarms, begin_time, end_time, host_description)
     except WinCCException as e:
             print(e)
             print(traceback.format_exc()) 

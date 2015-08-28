@@ -60,7 +60,7 @@ class AlarmRecord():
     def to_html(self):
         state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
         html = u"<table>\n"
-        html += u"<tr>\n<th>ID</th><th>Datetime</th><th>State</th><th>Priority</th><th>Text</th>\n</tr>\n"
+        html += u"<tr>\n<th>ID</th><th>Datetime</th><th>State</th><th>Priority</th><th>Location</th><th>Text</th>\n</tr>\n"
         for alarm in self.alarms:
             if alarm.state in state_dict:
                 state = state_dict[alarm.state]

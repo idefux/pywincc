@@ -1,7 +1,8 @@
 from jinja2 import Environment, FileSystemLoader
-from helper import str_to_datetime, datetime_to_str_without_ms, datetime_to_str_underscores
+from helper import str_to_datetime, datetime_to_str_without_ms, datetime_to_str_underscores,\
+    date_to_str, datetime_is_date
 
-def alarms_report(alarms, begin_time, end_time, host_description=''):
+def generate_alarms_report(alarms, begin_time, end_time, host_description=''):
 
     env = Environment(loader=FileSystemLoader('./reports/'))
     template = env.get_template("alarms.html")
@@ -9,9 +10,14 @@ def alarms_report(alarms, begin_time, end_time, host_description=''):
     dt_begin_time = str_to_datetime(begin_time)
     dt_end_time = str_to_datetime(end_time)
     
+    if datetime_is_date(dt_begin_time) and datetime_is_date(dt_end_time):
+        date_str = date_to_str(dt_begin_time.date())
+    else:        
+        date_str = "{0} - {1}".format(datetime_to_str_without_ms(dt_begin_time), datetime_to_str_without_ms(dt_end_time))
+    
     template_vars = {"title" : "Alarms Report", "alarms_log" : alarms.to_html(),
                      "plant" : host_description, "alarms_grouped_priority" : alarms.count_grouped_to_html(),
-                     "begin_time" : datetime_to_str_without_ms(dt_begin_time), "end_time" : datetime_to_str_without_ms(dt_end_time)}
+                     "date_str" : date_str}
     
     html_out = template.render(template_vars)
     #print html_out

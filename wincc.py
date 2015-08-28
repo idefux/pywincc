@@ -8,11 +8,11 @@ import os
 
 from mssql import mssql, MsSQLException
 from helper import datetime_to_str, utc_to_local_time, tic, str_to_date,\
-    daterange, date_to_str
+    daterange, date_to_str, datetime_to_str_without_ms
 from alarm import Alarm, AlarmRecord, alarm_query_builder
 from operator_messages import om_query_builder, OperatorMessageRecord,\
     OperatorMessage
-from report import alarms_report, operator_messages_report
+from report import generate_alarms_report, operator_messages_report
 from datetime import timedelta
 
 
@@ -157,7 +157,8 @@ class wincc(mssql):
         logging.debug("Rowcount: {rowcount}".format(rowcount=self.rowcount()))
         if self.rowcount():
             for rec in self.fetchall():
-                print rec['MsgNr'], rec['State'], datetime_to_str(utc_to_local_time(rec['DateTime'])), rec['Classname'], rec['Typename'], rec['Text2'], rec['Text1']    
+                #print rec['MsgNr'], rec['State'], datetime_to_str(utc_to_local_time(rec['DateTime'])), rec['Classname'], rec['Typename'], rec['Text2'], rec['Text1']
+                print u"{rec[MsgNr]} {rec[State]:2} {datetime} {rec[Classname]} {rec[Typename]:9} {rec[Text2]:14} {rec[Text1]}".format(rec=rec, datetime=datetime_to_str_without_ms(utc_to_local_time(rec['DateTime'])))
             print("Rows: {rows}".format(rows=self.rowcount()))
             
     def create_alarm_record(self):
@@ -239,7 +240,7 @@ def do_alarm_report(begin_time, end_time, host, database='', cache=False, use_ca
     #===========================================================================    
     
     print("Generating HTML output...")
-    alarms_report(alarms, begin_time, end_time, 'AGRO ENERGIE Schwyz')
+    generate_alarms_report(alarms, begin_time, end_time, 'AGRO ENERGIE Schwyz')
     
 def do_batch_alarm_report(begin_day, end_day, host, database):
     dt_begin_day = str_to_date(begin_day)

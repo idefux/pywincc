@@ -22,6 +22,17 @@ def datetime_to_str_underscores(dt):
     """Convert to e.g. "2015_01_21_10_22_10"""
     return dt.strftime('%Y_%m_%d_%H_%M_%S')
 
+def datetime_is_date(dt):
+    """Return True if datetime object is a date (H, M, S == 0)."""
+    
+    """
+    In fact it does not return True, but a datetime.time object.
+    datetime.time(0,0) is evaluated as False
+    e.g. datetime.time(0,1) is evaluated as True
+    So returning this object should be fine for my application
+    """
+    return not dt.time()
+
 def str_to_datetime(dt_str):
     """Convert strings of type "2015-08-21", "2015-08-21 10:23:25", "2015-08-26 07:47" and "2015-08-21 10:23:48.672" to datetime object
 
