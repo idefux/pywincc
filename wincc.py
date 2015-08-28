@@ -240,7 +240,7 @@ def do_alarm_report(begin_time, end_time, host, database='', cache=False, use_ca
     #===========================================================================    
     
     print("Generating HTML output...")
-    generate_alarms_report(alarms, begin_time, end_time, 'AGRO ENERGIE Schwyz')
+    generate_alarms_report(alarms, begin_time, end_time, 'AGRO ENERGIE Schwyz', '')
     
 def do_batch_alarm_report(begin_day, end_day, host, database):
     dt_begin_day = str_to_date(begin_day)

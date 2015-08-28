@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
 from helper import local_time_to_utc, datetime_to_str_without_ms,\
-    str_to_datetime
+    str_to_datetime, utc_to_local_time
 
 Alarm = namedtuple('Alarm', 'id state datetime classname priority location text')
 
@@ -25,7 +25,8 @@ class AlarmRecord():
                 state = state_dict[alarm.state]
             else:
                 state = alarm.state
-            output += u"ID={0}, {1}, {2}, {3}, {4}, '{5}'\n".format(alarm.id, alarm.datetime, state, alarm.priority, alarm.location, alarm.text)
+            output += u"{alarm.id} {state:4} {alarm.datetime} {alarm.priority:9} {alarm.location:14} {alarm.text}\n".format(alarm=alarm, state=state)
+            #output += u"{rec[MsgNr]} {rec[State]:2} {datetime} {rec[Classname]} {rec[Typename]:9} {rec[Text2]:14} {rec[Text1]}".format(rec=rec, datetime=datetime_to_str_without_ms(utc_to_local_time(rec['DateTime'])))
         return output
     
     def __str__(self):

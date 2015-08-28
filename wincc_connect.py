@@ -8,8 +8,9 @@ from alarm import alarm_query_builder
 from tag import tag_query_builder, print_tag_logging
 from interactive import InteractiveModeWinCC, InteractiveMode
 from operator_messages import om_query_builder
-from helper import tic
+from helper import tic, datetime_to_str_without_ms
 from report import generate_alarms_report
+from datetime import datetime
 
 
 class StringCP1252ParamType(click.ParamType):
@@ -108,15 +109,21 @@ def alarms(begin_time, end_time, text, host, database, utc, show, state, report,
         w = wincc(host, database)
         w.connect()
         w.execute(query)
-        w.print_alarms()
-        print("Fetched data in {time}.".format(time=round(toc(),3)))
+        
         if report:
             alarms = w.create_alarm_record()
             if report_hostname:
                 host_description = report_hostname
             else:
                 host_description = host
-            generate_alarms_report(alarms, begin_time, end_time, host_description)
+            if not end_time:
+                end_time = datetime_to_str_without_ms(datetime.now())
+            generate_alarms_report(alarms, begin_time, end_time, host_description, text)
+            print(unicode(alarms))
+        else:
+            w.print_alarms()
+        
+        print("Fetched data in {time}.".format(time=round(toc(),3)))        
     except WinCCException as e:
             print(e)
             print(traceback.format_exc()) 
