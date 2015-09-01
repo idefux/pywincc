@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+        <style>
+          table, td, tr, th { border: 1px solid grey; border-collapse: collapse; }
+          td { padding: 5px; }
+          #body { width: 70%; margin: 0 auto; }
+          #alarms_grouped { padding: 10px; background-color: #FFF; }
+          #alarms_log { padding: 10px; background-color: #FFF; }
+          #indent { background-color: #f1f1f1; padding: 15px; }
+          h2, h3 { text-align: center; }
+          .column-left { float: left; width: 15%; }
+          .column-center { display: inline-block; width: 70%; }
+          .column-right { float: right; width: 15%; }
+          .mirror { 
+            border:0;
+            display:inline-block,transform:scale(-1,1);
+            -webkit-transform:scale(-1,1);
+            -moz-transform:scale(-1,1);
+            -o-transform:scale(-1,1)
+          }
+        </style>
+</head>
+<body>
+    <div id="body">        
+        <h2>Alarms Report {{plant}}</h2>
+        <div class="column-left">
+            <a href="{{ link_prev_doc }}"><img src="images/go-next.ico" style="width: 50%; height: 50%;" class="mirror"/></a>
+        </div>
+        <div class="column-center" style="padding: auto;">
+        <h3>{{ date_str }}</h3>
+        </div>
+        <div class="column-right">
+            <div align="right">
+                <a href="{{ link_next_doc }}"><img src="images/go-next.ico" style="width: 50%; height: 50%;" size="50%"/></a>
+            </div>
+        </div>
+        
+        <h4>{{ filter_text }}</h4>
+        <h4>Alarms 'Come' grouped by priority</h4>
+        <div id="indent">            
+            <div id="alarms_grouped">
+                <table>
+                    <tr><th>Priority</th><th>Count</th></tr>
+                    <tr><td>WARNING</td><td>{{ count['warning'] }}</td></tr>
+                    <tr><td>ERROR_DAY</td><td>{{ count['error_day'] }}</td></tr>
+                    <tr><td>ERROR_NOW</td><td>{{ count['error_now'] }}</td></tr>
+                    <tr><td>STOP_ALL</td><td>{{ count['stop_all'] }}</td></tr>
+                    <tr><td>SUM</td><td>{{ count['sum'] }}</td></tr></table>
+                </table>
+            </div>
+        </div>
+        <h4>Alarms</h4>
+        <div id="indent">            
+            <div id="alarms_log">
+            <table>
+                <tr><th>ID</th><th>Datetime</th><th>State</th><th>Priority</th><th>Location</th><th>Text</th></tr>
+                {% for alarm in alarms %}            
+                    <tr><td>{{ alarm.id }}</td><td>{{ alarm.datetime }}</td><td>{{ state_dict[alarm.state] }}</td><td>{{ alarm.priority }}</td><td>{{ alarm.location }}</td><td>{{ alarm.text }}</td></tr>
+                {% endfor %}
+            </table>
+            </div>
+        </div>
+     </div>
+</body>
+</html>

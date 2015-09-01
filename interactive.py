@@ -154,7 +154,7 @@ class InteractiveMode():
         special_commands = {
                             'help': 'print(help_text)',
                             'exit': 'print(exit_message)\nloop=False',
-                            'databases': 'print(self.m.fetch_database_names())',
+                            'databases': 'print(self.mssql.fetch_database_names())',
                             'tables': 'print(self.mssql.fetch_table_names())',
                             'database': 'print(self.mssql.fetch_current_database_name())'
                             }

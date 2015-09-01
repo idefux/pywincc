@@ -10,6 +10,10 @@ def date_to_str(dt):
     """Convert datetime object to e.g. "2015-08-27" """
     return dt.strftime('%Y-%m-%d')
 
+def date_to_str_underscores(dt):
+    """Convert to e.g. "2015_09_01" """
+    return dt.strftime('%Y_%m_%d')
+
 def datetime_to_str(dt):
     """Convert datetime object to e.g. "2015-08-21 10:22:10.483"""
     return dt.strftime('%Y-%m-%d %H:%M:%S.%f')[0:-3]

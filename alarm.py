@@ -7,6 +7,8 @@ from helper import local_time_to_utc, datetime_to_str_without_ms,\
 Alarm = namedtuple('Alarm', 'id state datetime classname priority location text')
 
 class AlarmRecord():
+    state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
+    
     def __init__(self):
         self.alarms = []
         
@@ -18,11 +20,11 @@ class AlarmRecord():
         
     def __unicode__(self):
         #return unicode([alarm for alarm in self.alarms])
-        state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
+        self.state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
         output = ""
         for alarm in self.alarms:
-            if alarm.state in state_dict:
-                state = state_dict[alarm.state]
+            if alarm.state in self.state_dict:
+                state = self.state_dict[alarm.state]
             else:
                 state = alarm.state
             output += u"{alarm.id} {state:4} {alarm.datetime} {alarm.priority:9} {alarm.location:14} {alarm.text}\n".format(alarm=alarm, state=state)
@@ -32,7 +34,10 @@ class AlarmRecord():
     def __str__(self):
         return unicode(self).encode('utf-8')
         #return str([alarm for alarm in self.alarms])
-        
+
+    def __iter__(self):
+        return iter(self.alarms)
+
     def count_all(self):
         return len(self.alarms)
 
@@ -59,12 +64,12 @@ class AlarmRecord():
         return self.count_by_state_and_priority(1, u'STOP_ALL')
     
     def to_html(self):
-        state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
+        
         html = u"<table>\n"
         html += u"<tr>\n<th>ID</th><th>Datetime</th><th>State</th><th>Priority</th><th>Location</th><th>Text</th>\n</tr>\n"
         for alarm in self.alarms:
-            if alarm.state in state_dict:
-                state = state_dict[alarm.state]
+            if alarm.state in self.state_dict:
+                state = self.state_dict[alarm.state]
             else:
                 state = alarm.state
             html += u"<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>\n".format(alarm.id, alarm.datetime, state, alarm.priority, alarm.location, alarm.text)
@@ -81,6 +86,13 @@ class AlarmRecord():
         html += u"<tr><td>SUM</td><td>{count}</td></tr>".format(count=self.count_come())
         html += u"</table>\n"
         return html
+
+    def get_count_grouped(self):
+        return {'warning': self.count_come_warning(),
+                'error_day': self.count_come_error_day(),
+                'error_now': self.count_come_error_now(),
+                'stop_all': self.count_come_stop_all(),
+                'sum': self.count_come()}
         
 
 def alarm_query_builder(begin_time, end_time, msg_text, utc, state):
