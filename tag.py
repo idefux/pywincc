@@ -1,6 +1,6 @@
 """ Helper Functions to handle WinCC Tag queries"""
 from helper import datetime_to_str, str_to_datetime, local_time_to_utc,\
-    utc_to_local_time
+    utc_to_local
 
 def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):
     """Build the WinCC query string for reading tags
@@ -58,7 +58,7 @@ def print_tag_logging(records):
     '2015-08-23 14:47:54.000': 29.654.
     """
     for rec in records:
-        print("{tagid}, {datetime}: {value}.".format(tagid=rec[0], datetime=datetime_to_str(utc_to_local_time(str_to_datetime(rec[1]))), value=rec[2]))
+        print("{tagid}, {datetime}: {value}.".format(tagid=rec[0], datetime=datetime_to_str(utc_to_local(str_to_datetime(rec[1]))), value=rec[2]))
         #print rec
 
 if __name__ == "__main__":

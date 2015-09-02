@@ -8,7 +8,7 @@ import traceback
 import os
 
 from mssql import mssql, MsSQLException
-from helper import datetime_to_str, utc_to_local_time, tic, str_to_date,\
+from helper import datetime_to_str, utc_to_local, tic, str_to_date,\
     daterange, date_to_str, datetime_to_str_without_ms
 from alarm import Alarm, AlarmRecord, alarm_query_builder
 from operator_messages import om_query_builder, OperatorMessageRecord,\
@@ -60,8 +60,8 @@ class wincc(mssql):
             Please check databases at host {host}.".format(host=self.host))
 
         try:
-            logging.info("Trying to connect to {host} database {database}"
-                         .format(host=self.host, database=self.database))
+            logging.info("Trying to connect to %s database %s", self.host,
+                         self.database)
             self.conn = adodbapi.connect(self.conn_str,
                                          provider=self.provider,
                                          host=self.host,
@@ -87,8 +87,8 @@ class wincc(mssql):
         r = re.compile(r"CC_OS_[\d_]+R$")
         wincc_runtime_databases = filter(r.match, databases)
         if len(wincc_runtime_databases) == 1:
-            logging.debug("Using WinCC Runtime Database: {db}"
-                          .format(db=wincc_runtime_databases[0]))
+            logging.debug("Using WinCC Runtime Database: %s",
+                          wincc_runtime_databases[0])
             return wincc_runtime_databases[0]
         elif len(wincc_runtime_databases) == 0:
             logging.warn("Could not find a WinCC runtime database.")
@@ -98,8 +98,8 @@ class wincc(mssql):
             possible dead links at host.")
             wincc_runtime_databases.sort()
             logging.warn("Returning newest database.")
-            logging.debug("Using WinCC Runtime Database: {1}"
-                          .format(wincc_runtime_databases[-1]))
+            logging.debug("Using WinCC Runtime Database: %s",
+                          wincc_runtime_databases[-1])
             return wincc_runtime_databases[-1]
 
     def filter_wincc_config_database(self, databases):
@@ -117,17 +117,19 @@ class wincc(mssql):
         r = re.compile(r"CC_OS_[\d_]+$")
         wincc_config_databases = filter(r.match, databases)
         if len(wincc_config_databases) == 1:
-            logging.debug("Using WinCC config Database: {db}"
-                          .format(db=wincc_config_databases[0]))
+            logging.debug("Using WinCC config Database: %s",
+                          wincc_config_databases[0])
             return wincc_config_databases[0]
         elif len(wincc_config_databases) == 0:
             logging.warn("Could not find a WinCC config database.")
             return None
         if len(wincc_config_databases) > 1:
-            logging.warn("Found more than 1 WinCC config databases. Check for possible dead links at host.")
+            logging.warn("Found more than 1 WinCC config databases. Check for"
+                         " possible dead links at host.")
             wincc_config_databases.sort()
             logging.warn("Returning newest database.")
-            logging.debug("Using WinCC config Database: {1}".format(wincc_config_databases[-1]))
+            logging.debug("Using WinCC config Database: %s",
+                          wincc_config_databases[-1])
             return wincc_config_databases[-1]
 
     def fetch_wincc_database_name(self):
@@ -142,9 +144,9 @@ class wincc(mssql):
             m.close()
             self.database = self.filter_wincc_runtime_database(databases)
             if not self.database:
-                raise WinCCException("Could not fetch wincc runtime database. \
-                    Please make sure WinCC runtime is active on host {host}"
-                    .format(host=self.host))
+                raise WinCCException("Could not fetch wincc runtime database. "
+                                     "Please make sure WinCC runtime is active"
+                                     " on host {host}".format(host=self.host))
             return self.database
         except MsSQLException:
             raise WinCCException("Could not connect to host {host} with \
@@ -156,10 +158,10 @@ class wincc(mssql):
         Get database list and filter wincc runtime database.
         """
         try:
-            mssql = mssql(self.host, '')
-            mssql.connect()
-            databases = mssql.fetch_database_names()
-            mssql.close()
+            mssql_ = mssql(self.host, '')
+            mssql_.connect()
+            databases = mssql_.fetch_database_names()
+            mssql_.close()
             return self.filter_wincc_config_database(databases)
         except MsSQLException:
             raise WinCCException("Could not connect to host {host} with \
@@ -171,10 +173,10 @@ class wincc(mssql):
         Connection to server must be establidhed in advance.
         """
         try:
-            logging.debug("Executing query {query}.".format(query=query))
+            logging.debug("Executing query %s.", query)
             self.cursor.execute(query)
         except (adodbapi.DatabaseError, adodbapi.InterfaceError) as e:
-            errormsg = "query: '{query}' failed. Reason {reason}.".format(query=query, reason=str(e))
+            errormsg = "Query: %s failed. Reason: %s.", query, str(e)
             logging.error(errormsg)
             raise WinCCException(errormsg)
 
@@ -184,10 +186,11 @@ class wincc(mssql):
         logging.debug("Rowcount: {rowcount}".format(rowcount=self.rowcount()))
         if self.rowcount():
             for rec in self.fetchall():
-                datetime = datetime_to_str_without_ms(utc_to_local_time(rec['DateTime']))
-                print(u"{rec[MsgNr]} {rec[State]:2} {datetime} {rec[Classname]}\
-                 {rec[Typename]:9} {rec[Text2]:14} {rec[Text1]}\
-                 ".format(rec=rec, datetime=datetime))
+                datetime_local = utc_to_local(rec['DateTime'])
+                datetime_str = datetime_to_str_without_ms(datetime_local)
+                print(u"{rec[MsgNr]} {rec[State]:2} {datetime} {rec[Classname]}"
+                      u" {rec[Typename]:9} {rec[Text2]:14} {rec[Text1]}"
+                      .format(rec=rec, datetime=datetime_str))
             print("Rows: {rows}".format(rows=self.rowcount()))
 
     def create_alarm_record(self):
@@ -195,7 +198,7 @@ class wincc(mssql):
         if self.rowcount():
             alarms = AlarmRecord()
             for rec in self.fetchall():
-                datetime = datetime_to_str(utc_to_local_time(rec['DateTime']))
+                datetime = datetime_to_str(utc_to_local(rec['DateTime']))
                 alarms.push(Alarm(rec['MsgNr'], rec['State'], datetime,
                                   rec['Classname'], rec['Typename'],
                                   rec['Text2'], rec['Text1']))
@@ -209,7 +212,7 @@ class wincc(mssql):
         if self.rowcount():
             operator_messages = OperatorMessageRecord()
             for rec in self.fetchall():
-                datetime = datetime_to_str(utc_to_local_time(rec['DateTime']))
+                datetime = datetime_to_str(utc_to_local(rec['DateTime']))
                 op = OperatorMessage(datetime, rec['PText1'], rec['PText4'],
                                      rec['PText2'], rec['PText3'],
                                      rec['Username'])
@@ -224,7 +227,7 @@ class wincc(mssql):
                 print("PText2", rec['PText2'])
                 print("PText3", rec['PText3'])
                 print("PText4", rec['PText4'])
-                print(datetime_to_str(utc_to_local_time(rec['DateTime'])),
+                print(datetime_to_str(utc_to_local(rec['DateTime'])),
                       rec['PText1'], rec['PText2'], rec['PText3'],
                       rec['PText4'], rec['Username'])
 
@@ -247,11 +250,10 @@ def do_alarm_report(begin_time, end_time, host, database='',
             w.execute(query)
             # w.print_operator_messages()
             alarms = w.create_alarm_record()
-            # print("Fetched data in {time}.".format(time=round(toc(),3))) 
+            # print("Fetched data in {time}.".format(time=round(toc(),3)))
             if cache:
                 print("Caching!")
-                logging.debug("Writing alarms to {file}"
-                              .format(file='alarms.pkl'))
+                logging.debug("Writing alarms to %s", "alarms.pkl")
                 pkl_file = open('alarms.pkl', 'wb')
                 pickle.dump(alarms, pkl_file)
                 pkl_file.close()
@@ -263,7 +265,7 @@ def do_alarm_report(begin_time, end_time, host, database='',
             exec_time_alarms = toc()
             print(exec_time_alarms)
     else:
-        logging.debug("Current dir: {0}".format(os.getcwd()))
+        logging.debug("Current dir: %s", os.getcwd())
         logging.debug("Loading alarms from file 'alarms.pkl'.")
         pkl_file = open('alarms.pkl', 'rb')
         alarms = pickle.load(pkl_file)
@@ -297,8 +299,8 @@ def do_operator_messages_report(begin_time, end_time, host, database='',
             # print("Fetched data in {time}.".format(time=round(toc(),3)))
             if cache:
                 print("Caching!")
-                logging.debug("Writing operator_messages to {file}"
-                              .format(file='operator_messages.pkl'))
+                logging.debug("Writing operator_messages to %s",
+                              "operator_messages.pkl")
                 pkl_file = open('operator_messages.pkl', 'wb')
                 pickle.dump(operator_messages, pkl_file)
                 pkl_file.close()
@@ -310,8 +312,9 @@ def do_operator_messages_report(begin_time, end_time, host, database='',
             exec_time_operator_messages = toc()
             print(exec_time_operator_messages)
     else:
-        logging.debug("Current dir: {0}".format(os.getcwd()))
-        logging.debug("Loading operator_messages from file 'operator_messages.pkl'.")
+        logging.debug("Current dir: %s", os.getcwd())
+        logging.debug("Loading operator_messages from file "
+                      "'operator_messages.pkl'.")
         pkl_file = open('operator_messages.pkl', 'rb')
         operator_messages = pickle.load(pkl_file)
         pkl_file.close()
@@ -339,26 +342,26 @@ class WinCCHosts():
 
     def load_from_file(self):
         try:
-            logging.info("Trying to open file {0} for loading stored hosts."
-                         .format(self.filename))
+            logging.info("Trying to open file %s for loading stored hosts.",
+                         self.filename)
             with open(self.filename, 'rb') as fh:
                 self.hosts = pickle.load(fh)
                 return True
         except IOError:
-            logging.error("Opening file {0} failed. Could not load hosts."
-                          .format(self.filename))
+            logging.error("Opening file %s failed. Could not load hosts.",
+                          self.filename)
             return False
 
     def save_to_file(self):
         try:
-            logging.debug("Trying to open file {0} for saving hosts."
-                          .format(self.filename))
+            logging.debug("Trying to open file %s for saving hosts.",
+                          self.filename)
             with open(self.filename, 'wb') as fh:
                 pickle.dump(self.hosts, fh)
                 return True
         except IOError:
-            logging.error("Opening file {0} failed. Could not save hosts."
-                          .format(self.filename))
+            logging.error("Opening file %s failed. Could not save hosts.",
+                          self.filename)
             return False
 
     def add_host(self, hostname, host_address, database, descriptive_name):
@@ -366,7 +369,7 @@ class WinCCHosts():
             if host.hostname == hostname:
                 raise KeyError('Hostname {0} already in list.'
                                .format(hostname))
-        self.hosts.append(WinCCHost(hostname, host_address, database, 
+        self.hosts.append(WinCCHost(hostname, host_address, database,
                                     descriptive_name))
 
     def remove_host(self, hostname):

@@ -1,25 +1,31 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
 from collections import namedtuple
 from helper import local_time_to_utc, datetime_to_str_without_ms,\
-    str_to_datetime, utc_to_local_time
+    str_to_datetime
 
-Alarm = namedtuple('Alarm', 'id state datetime classname priority location text')
+Alarm = namedtuple('Alarm',
+                   'id state datetime classname priority location text')
+
 
 class AlarmRecord():
+    """Class to hold alarm records returned by a WinCC mssql query"""
+
     state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
-    
+
     def __init__(self):
         self.alarms = []
-        
+
     def push(self, alarm):
+        """Push a new Alarm to alarms list.
+        Alarm must be of type alarm.Alarm.
+        """
         if isinstance(alarm, Alarm):
             self.alarms.append(alarm)
         else:
-            raise TypeError("AlarmRecord: Expected type 'Alarm'. Got type {type}.".format(type=type(alarm)))
-        
+            raise TypeError("AlarmRecord: Expected type 'Alarm'. Got type "
+                            "{type}.".format(type=type(alarm)))
+
     def __unicode__(self):
-        #return unicode([alarm for alarm in self.alarms])
+        # return unicode([alarm for alarm in self.alarms])
         self.state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
         output = ""
         for alarm in self.alarms:
@@ -27,46 +33,54 @@ class AlarmRecord():
                 state = self.state_dict[alarm.state]
             else:
                 state = alarm.state
-            output += u"{alarm.id} {state:4} {alarm.datetime} {alarm.priority:9} {alarm.location:14} {alarm.text}\n".format(alarm=alarm, state=state)
-            #output += u"{rec[MsgNr]} {rec[State]:2} {datetime} {rec[Classname]} {rec[Typename]:9} {rec[Text2]:14} {rec[Text1]}".format(rec=rec, datetime=datetime_to_str_without_ms(utc_to_local_time(rec['DateTime'])))
+            output += u"{a.id} {state:4} ".format(a=alarm, state=state)
+            output += u"{a.datetime} {a.priority:9} ".format(a=alarm)
+            output += u"{a.location:14} {a.text}\n".format(a=alarm)
         return output
-    
+
     def __str__(self):
         return unicode(self).encode('utf-8')
-        #return str([alarm for alarm in self.alarms])
 
     def __iter__(self):
         return iter(self.alarms)
 
     def count_all(self):
+        """Return number of alarms in record."""
         return len(self.alarms)
 
     def count_come(self):
+        """Return number of alarms with state 'COME' in record"""
         return len([1 for a in self.alarms if a.state == 1])
-    
+
     def count_by_state_and_priority(self, state, priority):
         """Counts all alarms in record that fit given state and priority
         state = [1, 2, 3]
-        priority = [u'WARNING', u'ERROR_DAY', u'ERROR_NOW', u'STOP_ALL']        
+        priority = [u'WARNING', u'ERROR_DAY', u'ERROR_NOW', u'STOP_ALL']
         """
-        return len([1 for a in self.alarms if (a.priority == priority and a.state == state)])
-    
+        return len([1 for a in self.alarms
+                    if (a.priority == priority and a.state == state)])
+
     def count_come_warning(self):
+        """Return number of alarms of state 'COME' and priority 'WARNING'."""
         return self.count_by_state_and_priority(1, u'WARNING')
-    
+
     def count_come_error_day(self):
+        """Return number of alarms of state 'COME' and priority 'ERROR_DAY'."""
         return self.count_by_state_and_priority(1, u'ERROR_DAY')
-    
+
     def count_come_error_now(self):
+        """Return number of alarms of state 'COME' and priority 'ERROR_NOW'."""
         return self.count_by_state_and_priority(1, u'ERROR_NOW')
-    
+
     def count_come_stop_all(self):
+        """Return number of alarms of state 'COME' and priority 'STOP_ALL'."""
         return self.count_by_state_and_priority(1, u'STOP_ALL')
-    
+
     def to_html(self):
-        
+        """Return a string that holds a HTML representation of alarms in record."""
         html = u"<table>\n"
-        html += u"<tr>\n<th>ID</th><th>Datetime</th><th>State</th><th>Priority</th><th>Location</th><th>Text</th>\n</tr>\n"
+        html += u"<tr>\n<th>ID</th><th>Datetime</th><th>State</th><th>Priority"
+        html += u"</th><th>Location</th><th>Text</th>\n</tr>\n"
         for alarm in self.alarms:
             if alarm.state in self.state_dict:
                 state = self.state_dict[alarm.state]
@@ -75,8 +89,9 @@ class AlarmRecord():
             html += u"<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>\n".format(alarm.id, alarm.datetime, state, alarm.priority, alarm.location, alarm.text)
         html += u"</table>\n"
         return html
-    
+
     def count_grouped_to_html(self):
+        """Return a string that holds a HTML representation of grouped alarm priorities in record."""
         html = u"<table>\n"
         html += u"<tr><th>Priority</th><th>Count</th></tr>"
         html += u"<tr><td>WARNING</td><td>{count}</td></tr>".format(count=self.count_come_warning())
@@ -88,12 +103,13 @@ class AlarmRecord():
         return html
 
     def get_count_grouped(self):
+        """Return a dict of alarm priorities and counts."""
         return {'warning': self.count_come_warning(),
                 'error_day': self.count_come_error_day(),
                 'error_now': self.count_come_error_now(),
                 'stop_all': self.count_come_stop_all(),
                 'sum': self.count_come()}
-        
+
 
 def alarm_query_builder(begin_time, end_time, msg_text, utc, state):
     """Build wincc alarm query string
@@ -118,21 +134,21 @@ def alarm_query_builder(begin_time, end_time, msg_text, utc, state):
     if not utc:
         dt_begin_time = local_time_to_utc(dt_begin_time)
     # MsgNr < 12508141 to filter out operator messages
-    query = u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE MsgNr < 12508141 AND DateTime > '{begin}'".format(begin=datetime_to_str_without_ms(dt_begin_time))
-
+    datetime_str = datetime_to_str_without_ms(dt_begin_time)
+    query = u"ALARMVIEW:SELECT * FROM ALGVIEWDEU WHERE MsgNr < 12508141 AND "
+    query += u"DateTime > '{0}'".format(datetime_str)
 
     if end_time != '':
         dt_end_time = str_to_datetime(end_time)
         if not utc:
             dt_end_time = local_time_to_utc(dt_end_time)
-        query += u" AND DateTime < '{end}'".format(end=datetime_to_str_without_ms(dt_end_time))
+        dt_end_time_str = datetime_to_str_without_ms(dt_end_time)
+        query += u" AND DateTime < '{0}'".format(dt_end_time_str)
 
-    #if msg_id != '':
+    # if msg_id != '':
     #    query += " AND MsgNr = {id}".format(id=msg_id)
 
     if msg_text != '':
-        #print(type(msg_text))
-        #query += u" AND Text1 LIKE '%{text}%'".format(text=msg_text.decode("iso-8859-1"))
         query += u" AND Text1 LIKE '%{text}%'".format(text=msg_text)
 
     if state != '':

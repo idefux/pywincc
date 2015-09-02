@@ -1,7 +1,7 @@
 import adodbapi
 import re
 
-from helper import utc_to_local_time, datetime_to_str
+from helper import utc_to_local, datetime_to_str
 
 def adodbapi_SQLrow__unicode__(self):
     """Extend adodbapi's SQLrow class with an __unicod__ function.
@@ -145,7 +145,7 @@ class wincc_mssql_connection():
     def print_alarms(self):
         if self.c_wincc.rowcount > 0:
             for rec in self.c_wincc.fetchall():
-                print rec['MsgNr'], rec['State'], datetime_to_str(utc_to_local_time(rec['DateTime'])), rec['Classname'], rec['Typename'], rec['Text1']
+                print rec['MsgNr'], rec['State'], datetime_to_str(utc_to_local(rec['DateTime'])), rec['Classname'], rec['Typename'], rec['Text1']
             print("Rows: {rows}".format(rows=self.c_wincc.rowcount))
             
     def fetch_operator_messages(self, begin_datetime, end_datetime=0, alarm_text=''):
@@ -158,7 +158,7 @@ class wincc_mssql_connection():
     def print_operator_messages(self):
         if self.c_wincc.rowcount > 0:
             for rec in self.c_wincc.fetchall():
-                print datetime_to_str(utc_to_local_time(rec['DateTime'])), rec['PText1'], rec['PText2'], rec['PText3'], rec['PText4'], rec['Username']
+                print datetime_to_str(utc_to_local(rec['DateTime'])), rec['PText1'], rec['PText2'], rec['PText3'], rec['PText4'], rec['Username']
                         
     def get_tag_values(self, tag_id, begin_time, end_time='0000-00-00 00:00:00.000', timestep=0, mode='avg'):
         mode_dict = {'first': 1, 'last': 2, 'min': 3, 'max': 4, 'avg': 5, 'sum': 6, 'count':7,
