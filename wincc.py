@@ -239,7 +239,7 @@ class wincc(mssql):
 
 
 def do_alarm_report(begin_time, end_time, host, database='',
-                    cache=False, use_cached=False):
+                    cache=False, use_cached=False, host_desc=''):
     if not use_cached:
         query = alarm_query_builder(begin_time, end_time, '', True, '')
         alarms = None
@@ -271,17 +271,19 @@ def do_alarm_report(begin_time, end_time, host, database='',
         alarms = pickle.load(pkl_file)
         pkl_file.close()
 
-    print("Generating HTML output...")
-    generate_alarms_report(alarms, begin_time, end_time, 'AGRO ENERGIE Schwyz', '')
+    generate_alarms_report(alarms, begin_time, end_time, host_desc, '')
 
 
-def do_batch_alarm_report(begin_day, end_day, host, database):
+def do_batch_alarm_report(begin_day, end_day, host_address, database,
+                          host_desc='', timestep=1):
     dt_begin_day = str_to_date(begin_day)
     dt_end_day = str_to_date(end_day)
 
     for day in daterange(dt_begin_day, dt_end_day):
-        do_alarm_report(date_to_str(day), date_to_str(day + timedelta(1)),
-                        host, database)
+        logging.info('Trying to generate report for %s - %s.',
+                     dt_begin_day, dt_end_day)
+        do_alarm_report(date_to_str(day), date_to_str(day + timedelta(timestep)),
+                        host_address, database, host_desc=host_desc)
 
 
 def do_operator_messages_report(begin_time, end_time, host, database='',
@@ -366,7 +368,7 @@ class WinCCHosts():
 
     def add_host(self, hostname, host_address, database, descriptive_name):
         for host in self.hosts:
-            if host.hostname == hostname:
+            if host.hostname.lower() == hostname.lower():
                 raise KeyError('Hostname {0} already in list.'
                                .format(hostname))
         self.hosts.append(WinCCHost(hostname, host_address, database,
@@ -374,10 +376,25 @@ class WinCCHosts():
 
     def remove_host(self, hostname):
         for host in self.hosts:
-            if host.hostname == hostname:
+            if host.hostname.lower() == hostname.lower():
                 self.hosts.remove(host)
                 return True
         return False
+
+    def get_host(self, hostname):
+        """Return host details for given name.
+        If not found in database, raise KeyError.
+        """
+        for host in self.hosts:
+            if host.hostname.lower() == hostname.lower():
+                return host
+        raise KeyError("Hostname {0} not found in hosts database."
+                       .format(hostname))
+
+
+def get_host_by_name(hostname):
+    hosts = WinCCHosts()
+    return hosts.get_host(hostname)
 
 
 if __name__ == "__main__":

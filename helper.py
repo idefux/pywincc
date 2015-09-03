@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from dateutil import tz
 import time
+import logging
 
 
 def str_to_date(dt_str):
@@ -111,7 +112,9 @@ def utc_to_local(t):
 
 
 def daterange(start_date, end_date):
+    """Iterable for days in given range. end_date is excluded."""
     for n in range(int((end_date - start_date).days)):
+        logging.debug('Yielding date %s', start_date + timedelta(n))
         yield start_date + timedelta(n)
 
 

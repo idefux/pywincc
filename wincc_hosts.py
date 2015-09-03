@@ -29,16 +29,20 @@ def cli(debug):
 
 @cli.command()
 @click.argument('hostname')
-@click.option('--host-address', prompt=True, help='e.g. 10.1.57.50\\WINCC')
-@click.option('--database', default='', help='WINCC runtime database name e.g. \
-CC_OS_1__15_09_01_08_20_14R')
-@click.option('--descriptive-name', '-dn', default='', help='Optional more \
-descriptive name for the host. Used in report titles.')
+@click.option('--host-address', '-h', prompt=True,
+              help='e.g. 10.1.57.50\\WINCC')
+@click.option('--database', '-d', default='',
+              help='WINCC runtime database name e.g. \
+              CC_OS_1__15_09_01_08_20_14R')
+@click.option('--descriptive-name', '-dn', default='',
+              help='Optional more descriptive name for the host. Used in \
+              report titles.')
 def add_host(hostname, host_address, database, descriptive_name):
     """Add a host with given data to the list."""
     if not database:
-        read_database_name = raw_input('Database name not given. Do you want \
-        me to connect to host and read the database name? (y/n)')
+        read_database_name = raw_input('Database name not given. Do you want '
+                                       'me to connect to host and read the '
+                                       'database name? (y/n)')
         if read_database_name == 'y':
             wincc_ = wincc(host_address, '')
             database = wincc_.fetch_wincc_database_name()

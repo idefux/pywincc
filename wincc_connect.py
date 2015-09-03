@@ -3,7 +3,8 @@ import traceback
 import logging
 
 from wincc import wincc, WinCCException, do_alarm_report,\
-    do_batch_alarm_report, do_operator_messages_report
+    do_batch_alarm_report, do_operator_messages_report, WinCCHosts,\
+    get_host_by_name
 from alarm import alarm_query_builder
 from tag import tag_query_builder, print_tag_logging
 from interactive import InteractiveModeWinCC, InteractiveMode
@@ -11,6 +12,7 @@ from operator_messages import om_query_builder
 from helper import tic, datetime_to_str_without_ms
 from report import generate_alarms_report
 from datetime import datetime
+from mssql import mssql
 
 
 class StringCP1252ParamType(click.ParamType):
@@ -93,18 +95,40 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc, show):
 
 @cli.command()
 @click.argument('begin_time')
-@click.option('--end-time', '-e', default='', help='Can be absolute (see begin-time) or relative 0000-00-01[ 12:00:00[.000]]')
-@click.option('--text', default='', type= STRING_CP1252,help='Message text or part of message text.')
-@click.option('--host', '-h', prompt=True, help='Hostname')
+@click.option('--end-time', '-e', default='',
+              help='Can be absolute (see begin-time) or relative 0000-00-01[ 12:00:00[.000]]')
+@click.option('--text', default='', type=STRING_CP1252,
+              help='Message text or part of message text.')
+@click.option('--host', '-h', default='', help='Hostname')
 @click.option('--database', '-d', default='', help='Initial Database (Catalog).')
-@click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
-@click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
-@click.option('--state', default='',type=click.STRING, help="State condition e.g. '=2' or '>1'")
-@click.option('--report', '-r', default=False, is_flag=True, help="Print htmlalarm report")
-@click.option('--report-hostname', '-rh', default='', help="Host description to be printed on report.")
-def alarms(begin_time, end_time, text, host, database, utc, show, state, report, report_hostname):
+@click.option('--utc', default=False, is_flag=True,
+              help='Activate utc time. Otherwise local time is used.')
+@click.option('--show', '-s', default=False, is_flag=True,
+              help="Don't actually query the db. Just show what you would do.")
+@click.option('--state', default='', type=click.STRING,
+              help="State condition e.g. '=2' or '>1'")
+@click.option('--report', '-r', default=False, is_flag=True,
+              help="Print html alarm report")
+@click.option('--report-hostname', '-rh', default='',
+              help="Host description to be printed on report.")
+@click.option('--hostname', '-n', default='',
+              help='Hostname (will be looked up in hosts.sav)')
+def alarms(begin_time, end_time, text, host, database, utc, show, state,
+           report, report_hostname, hostname):
     """Read alarms from given host in given time."""
+    if hostname:
+        h = get_host_by_name(hostname)
+        host = h.host_address
+        database = h.database
+        report_hostname = h.descriptive_name
+    elif host:
+        pass
+    else:
+        print('Either hostname or host must be specified. Quitting.')
+        return
+
     query = alarm_query_builder(begin_time, end_time, text, utc, state)
+
     if show:
         print(query)
         return
@@ -123,15 +147,16 @@ def alarms(begin_time, end_time, text, host, database, utc, show, state, report,
                 host_description = host
             if not end_time:
                 end_time = datetime_to_str_without_ms(datetime.now())
-            generate_alarms_report(alarms, begin_time, end_time, host_description, text)
+            generate_alarms_report(alarms, begin_time, end_time,
+                                   host_description, text)
             print(unicode(alarms))
         else:
             w.print_alarms()
 
         print("Fetched data in {time}.".format(time=round(toc(), 3)))
     except WinCCException as e:
-            print(e)
-            print(traceback.format_exc())
+        print(e)
+        print(traceback.format_exc())
     finally:
         w.close()
 
@@ -215,12 +240,62 @@ def operator_messages_report(begin_time, end_time, host, database, cache, use_ca
 @cli.command()
 @click.argument('begin_day')
 @click.argument('end_day')
-@click.option('--host', '-h', prompt=True, help='Hostname')
-@click.option('--database', '-d', prompt=True, help='Initial Database (Catalog).')
-def batch_report(begin_day, end_day, host, database):
+@click.option('--host', '-h', help='Hostname')
+@click.option('--database', '-d', help='Initial Database (Catalog).')
+@click.option('--hostname', '-n', default='', help='Hostname (will be looked up in hosts.sav)')
+def batch_report(begin_day, end_day, host, database, hostname):
     """Print a report for each day starting from begin_day to end_day."""
-    do_batch_alarm_report(begin_day, end_day, host, database)
+    if hostname:
+        hosts = WinCCHosts()
+        h = hosts.get_host(hostname)
+        if h:
+            host = h.host_address
+            database = h.database
+            host_desc = h.descriptive_name
+            logging.info('Successfully loaded %s %s %s %s.',
+                         hostname, host, database, host_desc)
+    elif host:
+        host_desc = ''
+    else:
+        print('Either hostname or host must be specified. Quitting.')
+        return
 
+    if not database:
+        logging.info('Database name not given. Trying to fetch it.')
+        wincc_ = wincc(host, '')
+        database = wincc_.fetch_wincc_database_name()
+        wincc_.close()
+
+    do_batch_alarm_report(begin_day, end_day, host, database, host_desc)
+
+
+@cli.command()
+@click.argument('hostname')
+@click.argument('begin_day')
+@click.argument('end_day')
+@click.option('--timestep', '-t', help='Time interval [day|week|month].')
+def alarm_report2(hostname, begin_day, end_day, timestep):
+    """Generate report(s) for known host."""
+    hosts = WinCCHosts()
+    host = hosts.get_host(hostname)
+    host_address = host.host_address
+    database = host.database
+    host_desc = host.descriptive_name
+
+    do_batch_alarm_report(begin_day, end_day, host_address,
+                          database, host_desc, timestep)
+
+
+@cli.command()
+@click.argument('hostname')
+def parameters(hostname):
+    """Connect to host and retrieve parameter list."""
+    host = get_host_by_name(hostname)
+    mssql_conn = mssql(host.host_address, host.database[:-1])
+    mssql_conn.connect()
+    params = mssql_conn.create_parameter_record()
+    mssql_conn.close()
+    print(params)
 
 if __name__ == "__main__":
     cli()

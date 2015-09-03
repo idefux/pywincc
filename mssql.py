@@ -1,6 +1,8 @@
 import adodbapi
 import logging
 
+from parameter import ParameterRecord, Parameter
+
 class MsSQLException(Exception):
     def __init__(self, message=''):
         self.message = message   
@@ -40,13 +42,13 @@ class mssql():
 
     def fetchall(self):
         return self.cursor.fetchall()
-    
+
     def fetchone(self):
         return self.cursor.fetchone()
 
     def rowcount(self):
         return self.cursor.rowcount
-  
+
     def fetch_database_names(self):
         logging.info("Fetching database names from host {host}".format(host=self.host))
         self.execute("EXEC sp_databases;")            
@@ -59,7 +61,7 @@ class mssql():
                 return [rec[0] for rec in self.fetchall()]
             else:
                 return None
-    
+
     def fetch_current_database_name(self):
         self.execute("SELECT DB_NAME();")
         return self.fetchone()[0]    
@@ -70,6 +72,24 @@ class mssql():
         if self.rowcount():
             return [rec[0] for rec in self.fetchall()]
         return None
+
+    def create_parameter_record(self):
+        """This is VAS only.
+        It will not unless you have a parameter system same like ours.
+        """
+        query = "SELECT * FROM SYS_TABLE_P ORDER BY PID;"
+        self.execute(query)
+        if self.rowcount():
+            params = ParameterRecord()
+            for rec in self.fetchall():
+                params.push(Parameter(rec['PID'], rec['Tag'], rec['ucText'],
+                                      rec['siValue'], rec['siMin'],
+                                      rec['siMax'], rec['siDef'],
+                                      rec['ucSection'], rec['ucGroup'],
+                                      rec['ucRight']))
+            return params
+        else:
+            return None
 
     def close(self):
         if self.cursor:
