@@ -6,7 +6,7 @@ from wincc import wincc, WinCCException, do_alarm_report,\
     do_batch_alarm_report, do_operator_messages_report, WinCCHosts,\
     get_host_by_name
 from alarm import alarm_query_builder
-from tag import tag_query_builder, print_tag_logging
+from tag import tag_query_builder, print_tag_logging, plot_tag_records
 from interactive import InteractiveModeWinCC, InteractiveMode
 from operator_messages import om_query_builder
 from helper import tic, datetime_to_str_without_ms
@@ -140,10 +140,13 @@ def tag2(tagid, begin_time, end_time, timestep, mode, host, database, utc, show,
         w.connect()
         w.execute(query)
 
-        tags = w.create_tag_record()
+        records = w.create_tag_records()
         print("Fetched data in {time}.".format(time=round(toc(), 3)))
         # print(tags)
-        tags.plot()
+        # tags.plot()
+        for record in records:
+            print(record)
+        #plot_tag_records(records)
 
     except Exception as e:
         print(e)
@@ -250,26 +253,35 @@ def operator_messages(begin_time, end_time, text, host, database, utc, show):
 
 
 @cli.command()
-@click.argument('name')
-@click.option('--host', '-h', prompt=True, help='Hostname')
-@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
-def tagid_by_name(name, host, database):
+@click.argument('tagname')
+@click.argument('hostname')
+# @click.option('--host', '-h', prompt=True, help='Hostname')
+# @click.option('--database', '-d', default='',
+# help='Initial Database (Catalog).')
+# @click.option('--hostname', '-n', prompt=True,
+#              help='Hostname (will be looked up in hosts.sav)')
+def tagid_by_name(tagname, hostname):
     """Search hosts db for tag entries matching the given name.
     Return tagid.
     """
+    h = get_host_by_name(hostname)
+    host = h.host_address
+    database = h.database[:-1]
+
     try:
         toc = tic()
-        w = wincc(host, database)
-        w.connect()
-        w.execute("SELECT TLGTAGID, VARNAME FROM PDE#TAGs WHERE VARNAME LIKE '%{name}%'".format(name=name))
-        if w.rowcount():
-            for rec in w.fetchall():
+        mssql_conn = mssql(host, database)
+        mssql_conn.connect()
+        mssql_conn.execute("SELECT TLGTAGID, VARNAME FROM PDE#TAGs WHERE "
+                           "VARNAME LIKE '%{name}%'".format(name=tagname))
+        if mssql_conn.rowcount():
+            for rec in mssql_conn.fetchall():
                 print rec
         print("Fetched data in {time}.".format(time=round(toc(), 3)))
     except Exception as e:
         print(e)
     finally:
-        w.close()
+        mssql_conn.close()
 
 
 @cli.command()

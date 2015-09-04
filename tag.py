@@ -55,6 +55,16 @@ class TagRecord():
         pyplot.show()
 
 
+def plot_tag_records(tag_records):
+    from matplotlib import pyplot
+    pyplot.figure(1)
+    num_rows = len(tag_records)
+    num_cols = 1
+    for i, records in enumerate(tag_records):
+        pyplot.subplot(num_rows, num_cols, i+1)
+        pyplot.plot(records.get_xs_ys())
+    pyplot.show()
+
 def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):
     """Build the WinCC query string for reading tags
 

@@ -231,6 +231,31 @@ class wincc(mssql):
             return tags
         return None
 
+    def create_tag_records(self):
+        """Fetch tags from cursor and return a TagRecord objects.
+        This is experimental to test handling of multiple records in cursor.
+        """
+        tag_records = []
+        p_rec = -1
+        if self.rowcount():
+            # Create first recordset
+            tag_records.append(TagRecord())
+            p_rec += 1
+            rec = self.fetchone()
+            tag_records[p_rec].tagid = rec['valueid']
+            datetime = utc_to_local(rec['timestamp'])
+            tag_records[p_rec].push(Tag(datetime, rec['realvalue']))
+
+            for rec in self.fetchall():
+                if rec['valueid'] != tag_records[p_rec].tagid:
+                    tag_records.append(TagRecord())
+                    p_rec += 1
+                    tag_records[p_rec].tagid = rec['valueid']
+                datetime = utc_to_local(rec['timestamp'])
+                tag_records[p_rec].push(Tag(datetime, rec['realvalue']))
+            return tag_records
+        return None
+
     def print_operator_messages(self):
         if self.rowcount():
             for rec in self.fetchall():
