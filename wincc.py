@@ -11,6 +11,7 @@ from mssql import mssql, MsSQLException
 from helper import datetime_to_str, utc_to_local, tic, str_to_date,\
     daterange, date_to_str, datetime_to_str_without_ms
 from alarm import Alarm, AlarmRecord, alarm_query_builder
+from tag import Tag, TagRecord
 from operator_messages import om_query_builder, OperatorMessageRecord,\
     OperatorMessage
 from report import generate_alarms_report, operator_messages_report
@@ -218,6 +219,16 @@ class wincc(mssql):
                                      rec['Username'])
                 operator_messages.push(op)
             return operator_messages
+        return None
+
+    def create_tag_record(self):
+        """Fetch tags from cursor and return a TagRecord object"""
+        if self.rowcount():
+            tags = TagRecord()
+            for rec in self.fetchall():
+                datetime = utc_to_local(rec['timestamp'])
+                tags.push(Tag(datetime, rec['realvalue']))
+            return tags
         return None
 
     def print_operator_messages(self):
