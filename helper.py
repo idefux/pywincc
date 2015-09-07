@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from dateutil import tz
-import time
+from time import time
 import logging
 
 
@@ -119,15 +119,17 @@ def daterange(start_date, end_date):
 
 
 def tic():
-    """Simple helper function for timing executions
+    """Simple helper function for timing execution
+
+    Returns a closure that holds current time when calling tic().
 
     Usage:
     toc = tic()
     //some code
     print(toc())
     """
-    t = time.time()
-    return (lambda: (time.time() - t))
+    t = time()
+    return (lambda: (time() - t))
 
 
 if __name__ == "__main__":
