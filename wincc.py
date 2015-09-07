@@ -69,7 +69,9 @@ class wincc(mssql):
                                          database=self.database)
             self.cursor = self.conn.cursor()
 
-        except (adodbapi.DatabaseError, adodbapi.InterfaceError):
+        except (adodbapi.DatabaseError, adodbapi.InterfaceError) as e:
+            print(e)
+            print(traceback.format_exc())
             raise WinCCException(message='Connection to host {host} failed.'
                                  .format(host=self.host))
 

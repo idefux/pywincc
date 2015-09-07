@@ -77,6 +77,3 @@ def remove_host(hostname):
         print("Host successfully removed from list.")
     else:
         print("Host could not be found.")
-
-if __name__ == "__main__":
-    cli()

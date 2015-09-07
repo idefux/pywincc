@@ -9,9 +9,9 @@ from alarm import alarm_query_builder
 from tag import tag_query_builder, print_tag_logging, plot_tag_records
 from interactive import InteractiveModeWinCC, InteractiveMode
 from operator_messages import om_query_builder
-from helper import tic, datetime_to_str_without_ms
+from helper import tic, datetime_to_str_without_ms, eval_datetime
 from report import generate_alarms_report
-from datetime import datetime
+from datetime import datetime, timedelta
 from mssql import mssql
 
 
@@ -35,24 +35,59 @@ class StringCP1252ParamType(click.ParamType):
 STRING_CP1252 = StringCP1252ParamType()
 
 
+class HostInfo():
+
+    def __init__(self):
+        self.address = None
+        self.database = None
+        self.name = None
+        self.description = None
+
+    def add_hostinfo(self, host_address, database, hostname):
+        if hostname:
+            h = get_host_by_name(hostname)
+            self.address = h.host_address
+            self.database = h.database
+            self.description = h.descriptive_name
+            return
+        elif host_address:
+            self.address = host_address
+            self.database = database
+            return
+        else:
+            print('Either hostname or host must be specified. Quitting.')
+            raise KeyError()
+
+
+host_info = HostInfo()
+
+
 @click.group()
-@click.option('--debug', default=False, is_flag=True, help='Turn on debug mode. Will print some debug messages.')
-def cli(debug):
+@click.option('--debug', default=False, is_flag=True,
+              help='Turn on debug mode. Will print some debug messages.')
+@click.option('--host-address', '-h', default='',
+              help='Host address e.g. 10.1.57.50')
+@click.option('--database', '-d', default='',
+              help='Initial Database (Catalog).')
+@click.option('--hostname', '-n', default='',
+              help="Hostname e.g. 'agro'. Hostname will be looked up in "
+              "hosts.sav file.")
+def cli(debug, host_address, database, hostname):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+    host_info.add_hostinfo(host_address, database, hostname)
 
 
 @cli.command()
-@click.option('--host', '-h', default='127.0.0.1', help='Hostname')
-@click.option('--database', '-d', default='', help='Initial Database (Catalog).')    
-@click.option('--wincc-provider', '-w', default=False, is_flag=True, help='Use WinCCOLEDBProvider.1 instead of SQLOLEDB.1')
-def interactive(host, database, wincc_provider):
+@click.option('--wincc-provider', '-w', default=False, is_flag=True,
+              help='Use WinCCOLEDBProvider.1 instead of SQLOLEDB.1')
+def interactive(wincc_provider):
     if wincc_provider:
         # interactive_mode_wincc(host, database)
-        shell = InteractiveModeWinCC(host, database)
+        shell = InteractiveModeWinCC(host_info.address, host_info.database)
         shell.run()
     else:
-        shell = InteractiveMode(host, database)
+        shell = InteractiveMode(host_info.address, host_info.database)
         shell.run()
 
 
@@ -62,24 +97,10 @@ def interactive(host, database, wincc_provider):
 @click.option('--end-time', '-e', default='', help='Can be absolute (see begin-time) or relative 0000-00-01[ 12:00:00[.000]]')
 @click.option('--timestep', '-t', default=0, help='Group result in timestep long sections. Time in seconds.')
 @click.option('--mode', '-m', default='first', help="Optional mode. Can be first, last, min, max, avg, sum, count, and every mode with an '_interpolated' appended e.g. first_interpolated.")
-@click.option('--host', '-h', default='', help='Hostname')
-@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
 @click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
 @click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
-@click.option('--hostname', '-n', default='',
-              help='Hostname (will be looked up in hosts.sav)')
-def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc, show, hostname):
+def tag(tagid, begin_time, end_time, timestep, mode, utc, show):
     """Parse user friendly tag query and assemble userunfriendly wincc query"""
-    if hostname:
-        h = get_host_by_name(hostname)
-        host = h.host_address
-        database = h.database
-    elif host:
-        pass
-    else:
-        print('Either hostname or host must be specified. Quitting.')
-        return
-
     query = tag_query_builder(tagid, begin_time, end_time, timestep, mode, utc)
     if show:
         print(query)
@@ -87,7 +108,7 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc, show, 
 
     toc = tic()
     try:
-        w = wincc(host, database)
+        w = wincc(host_info.address, host_info.database)
         w.connect()
         w.execute(query)
 
@@ -111,24 +132,10 @@ def tag(tagid, begin_time, end_time, timestep, mode, host, database, utc, show, 
 @click.option('--end-time', '-e', default='', help='Can be absolute (see begin-time) or relative 0000-00-01[ 12:00:00[.000]]')
 @click.option('--timestep', '-t', default=0, help='Group result in timestep long sections. Time in seconds.')
 @click.option('--mode', '-m', default='first', help="Optional mode. Can be first, last, min, max, avg, sum, count, and every mode with an '_interpolated' appended e.g. first_interpolated.")
-@click.option('--host', '-h', default='', help='Hostname')
-@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
 @click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
 @click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
-@click.option('--hostname', '-n', default='',
-              help='Hostname (will be looked up in hosts.sav)')
-def tag2(tagid, begin_time, end_time, timestep, mode, host, database, utc, show, hostname):
+def tag2(tagid, begin_time, end_time, timestep, mode, utc, show):
     """Parse user friendly tag query and assemble userunfriendly wincc query"""
-    if hostname:
-        h = get_host_by_name(hostname)
-        host = h.host_address
-        database = h.database
-    elif host:
-        pass
-    else:
-        print('Either hostname or host must be specified. Quitting.')
-        return
-
     query = tag_query_builder(tagid, begin_time, end_time, timestep, mode, utc)
     if show:
         print(query)
@@ -136,7 +143,7 @@ def tag2(tagid, begin_time, end_time, timestep, mode, host, database, utc, show,
 
     toc = tic()
     try:
-        w = wincc(host, database)
+        w = wincc(host_info.address, host_info.database)
         w.connect()
         w.execute(query)
 
@@ -161,8 +168,6 @@ def tag2(tagid, begin_time, end_time, timestep, mode, host, database, utc, show,
               help='Can be absolute (see begin-time) or relative 0000-00-01[ 12:00:00[.000]]')
 @click.option('--text', default='', type=STRING_CP1252,
               help='Message text or part of message text.')
-@click.option('--host', '-h', default='', help='Hostname')
-@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
 @click.option('--utc', default=False, is_flag=True,
               help='Activate utc time. Otherwise local time is used.')
 @click.option('--show', '-s', default=False, is_flag=True,
@@ -173,23 +178,12 @@ def tag2(tagid, begin_time, end_time, timestep, mode, host, database, utc, show,
               help="Print html alarm report")
 @click.option('--report-hostname', '-rh', default='',
               help="Host description to be printed on report.")
-@click.option('--hostname', '-n', default='',
-              help='Hostname (will be looked up in hosts.sav)')
-def alarms(begin_time, end_time, text, host, database, utc, show, state,
-           report, report_hostname, hostname):
+def alarms(begin_time, end_time, text, utc, show, state,
+           report, report_hostname):
     """Read alarms from given host in given time."""
-    if hostname:
-        h = get_host_by_name(hostname)
-        host = h.host_address
-        database = h.database
-        report_hostname = h.descriptive_name
-    elif host:
-        pass
-    else:
-        print('Either hostname or host must be specified. Quitting.')
-        return
-
-    query = alarm_query_builder(begin_time, end_time, text, utc, state)
+    query = alarm_query_builder(eval_datetime(begin_time),
+                                eval_datetime(end_time),
+                                text, utc, state)
 
     if show:
         print(query)
@@ -197,7 +191,7 @@ def alarms(begin_time, end_time, text, host, database, utc, show, state,
 
     try:
         toc = tic()
-        w = wincc(host, database)
+        w = wincc(host_info.address, host_info.database)
         w.connect()
         w.execute(query)
 
@@ -206,7 +200,7 @@ def alarms(begin_time, end_time, text, host, database, utc, show, state,
             if report_hostname:
                 host_description = report_hostname
             else:
-                host_description = host
+                host_description = host_info.description
             if not end_time:
                 end_time = datetime_to_str_without_ms(datetime.now())
             generate_alarms_report(alarms, begin_time, end_time,
@@ -225,13 +219,16 @@ def alarms(begin_time, end_time, text, host, database, utc, show, state,
 
 @cli.command()
 @click.argument('begin_time')
-@click.option('--end-time', '-e', default='', help='Can be absolute (see begin-time) or relative 0000-00-01[ 12:00:00[.000]]')
-@click.option('--text', default='', type= STRING_CP1252,help='Message text or part of message text.')
-@click.option('--host', '-h', prompt=True, help='Hostname')
-@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
-@click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
-@click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
-def operator_messages(begin_time, end_time, text, host, database, utc, show):
+@click.option('--end-time', '-e', default='',
+              help='Can be absolute (see begin-time) or relative \
+              0000-00-01[ 12:00:00[.000]]')
+@click.option('--text', default='', type=STRING_CP1252,
+              help='Message text or part of message text.')
+@click.option('--utc', default=False, is_flag=True,
+              help='Activate utc time. Otherwise local time is used.')
+@click.option('--show', '-s', default=False, is_flag=True,
+              help="Don't actually query the db. Just show what you would do.")
+def operator_messages(begin_time, end_time, text, utc, show):
     """Query db for operator messages."""
     query = om_query_builder(begin_time, end_time, text, utc)
     if show:
@@ -240,7 +237,7 @@ def operator_messages(begin_time, end_time, text, host, database, utc, show):
 
     try:
         toc = tic()
-        w = wincc(host, database)
+        w = wincc(host_info.address, host_info.database)
         w.connect()
         w.execute(query)
         w.print_operator_messages()
@@ -254,23 +251,14 @@ def operator_messages(begin_time, end_time, text, host, database, utc, show):
 
 @cli.command()
 @click.argument('tagname')
-@click.argument('hostname')
-# @click.option('--host', '-h', prompt=True, help='Hostname')
-# @click.option('--database', '-d', default='',
-# help='Initial Database (Catalog).')
-# @click.option('--hostname', '-n', prompt=True,
-#              help='Hostname (will be looked up in hosts.sav)')
-def tagid_by_name(tagname, hostname):
+def tagid_by_name(tagname):
     """Search hosts db for tag entries matching the given name.
     Return tagid.
     """
-    h = get_host_by_name(hostname)
-    host = h.host_address
-    database = h.database[:-1]
-
     try:
         toc = tic()
-        mssql_conn = mssql(host, database)
+        mssql_conn = mssql(host_info.address,
+                           strip_R_from_db_name(host_info.database))
         mssql_conn.connect()
         mssql_conn.execute("SELECT TLGTAGID, VARNAME FROM PDE#TAGs WHERE "
                            "VARNAME LIKE '%{name}%'".format(name=tagname))
@@ -287,86 +275,72 @@ def tagid_by_name(tagname, hostname):
 @cli.command()
 @click.argument('begin_time')
 @click.argument('end_time')
-@click.option('--host', '-h', prompt=True, help='Hostname')
-@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
-@click.option('--cache', is_flag=True, default=False, help='Cache alarms (pickle).')
-@click.option('--use-cached', is_flag=True, default=False, help='Use cached alarms')
-def alarm_report(begin_time, end_time, host, database, cache, use_cached):
+@click.option('--cache', is_flag=True, default=False,
+              help='Cache alarms (pickle).')
+@click.option('--use-cached', is_flag=True, default=False,
+              help='Use cached alarms')
+def alarm_report(begin_time, end_time, cache, use_cached):
     """Print report of alarms for given host in given time."""
-    do_alarm_report(begin_time, end_time, host, database, cache, use_cached)
+    do_alarm_report(begin_time, end_time, host_info.address, host_info.database,
+                    cache, use_cached)
 
 
 @cli.command()
 @click.argument('begin_time')
 @click.argument('end_time')
-@click.option('--host', '-h', prompt=True, help='Hostname')
-@click.option('--database', '-d', default='', help='Initial Database (Catalog).')
-@click.option('--cache', is_flag=True, default=False, help='Cache alarms (pickle).')
-@click.option('--use-cached', is_flag=True, default=False, help='Use cached alarms')
-def operator_messages_report(begin_time, end_time, host, database, cache, use_cached):
+@click.option('--cache', is_flag=True, default=False,
+              help='Cache alarms (pickle).')
+@click.option('--use-cached', is_flag=True, default=False,
+              help='Use cached alarms')
+def operator_messages_report(begin_time, end_time, cache, use_cached):
     """Print report of operator messages for given host in given time."""
-    do_operator_messages_report(begin_time, end_time, host, database, cache, use_cached)
+    do_operator_messages_report(begin_time, end_time, host_info.address,
+                                host_info.database, cache, use_cached)
 
 
 @cli.command()
 @click.argument('begin_day')
 @click.argument('end_day')
-@click.option('--host', '-h', help='Hostname')
-@click.option('--database', '-d', help='Initial Database (Catalog).')
-@click.option('--hostname', '-n', default='', help='Hostname (will be looked up in hosts.sav)')
-def batch_report(begin_day, end_day, host, database, hostname):
+def batch_report(begin_day, end_day):
     """Print a report for each day starting from begin_day to end_day."""
-    if hostname:
-        hosts = WinCCHosts()
-        h = hosts.get_host(hostname)
-        if h:
-            host = h.host_address
-            database = h.database
-            host_desc = h.descriptive_name
-            logging.info('Successfully loaded %s %s %s %s.',
-                         hostname, host, database, host_desc)
-    elif host:
-        host_desc = ''
-    else:
-        print('Either hostname or host must be specified. Quitting.')
-        return
-
-    if not database:
-        logging.info('Database name not given. Trying to fetch it.')
-        wincc_ = wincc(host, '')
-        database = wincc_.fetch_wincc_database_name()
-        wincc_.close()
-
-    do_batch_alarm_report(begin_day, end_day, host, database, host_desc)
+    do_batch_alarm_report(begin_day, end_day, host_info.address,
+                          host_info.database, host_info.description)
 
 
 @cli.command()
-@click.argument('hostname')
 @click.argument('begin_day')
 @click.argument('end_day')
 @click.option('--timestep', '-t', help='Time interval [day|week|month].')
-def alarm_report2(hostname, begin_day, end_day, timestep):
+def alarm_report2(begin_day, end_day, timestep):
     """Generate report(s) for known host."""
-    hosts = WinCCHosts()
-    host = hosts.get_host(hostname)
-    host_address = host.host_address
-    database = host.database
-    host_desc = host.descriptive_name
-
-    do_batch_alarm_report(begin_day, end_day, host_address,
-                          database, host_desc, timestep)
+    do_batch_alarm_report(begin_day, end_day, host_info.address,
+                          host_info.database, host_info.description, timestep)
 
 
 @cli.command()
-@click.argument('hostname')
-def parameters(hostname):
+def parameters():
     """Connect to host and retrieve parameter list."""
-    host = get_host_by_name(hostname)
-    mssql_conn = mssql(host.host_address, host.database[:-1])
+    mssql_conn = mssql(host_info.address,
+                       strip_R_from_db_name(host_info.database))
     mssql_conn.connect()
     params = mssql_conn.create_parameter_record()
     mssql_conn.close()
     print(params)
 
+
+def strip_R_from_db_name(database):
+    """Strip the 'R' from db name if present. Else do nothing.
+    Examples:
+    >>> strip_R_from_db_name('CC_OS_1__15_08_01_12_45_57R')
+    'CC_OS_1__15_08_01_12_45_57'
+    >>> strip_R_from_db_name('CC_OS_1__15_08_01_12_45_59')
+    'CC_OS_1__15_08_01_12_45_59'
+    """
+    if database.endswith('R'):
+        return database[:-1]
+    return database
+
+
 if __name__ == "__main__":
-    cli()
+    import doctest
+    doctest.testmod()

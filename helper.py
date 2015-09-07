@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil import tz
 from time import time
 import logging
@@ -130,6 +130,37 @@ def tic():
     """
     t = time()
     return (lambda: (time() - t))
+
+
+def eval_datetime(str_datetime):
+    """Return datetime object for given string.
+
+    Allow for keywords 'today', 'yesterday', 'yesterday-1', 'tomorrow'.
+
+    Examples:
+    >>> eval_datetime('2015-09-07')
+    datetime.datetime(2015, 9, 7, 0, 0)
+
+    eval_datetime('today')
+    """
+    if str_datetime == 'today':
+        today = datetime.now().replace(hour=0, minute=0, second=0,
+                                       microsecond=0)
+        return today
+    elif str_datetime == 'yesterday':
+        today = datetime.now().replace(hour=0, minute=0, second=0,
+                                       microsecond=0)
+        return (today - timedelta(1))
+    elif str_datetime == 'yesterday-1':
+        today = datetime.now().replace(hour=0, minute=0, second=0,
+                                       microsecond=0)
+        return (today - timedelta(2))
+    elif str_datetime == 'tomorrow':
+        today = datetime.now().replace(hour=0, minute=0, second=0,
+                                       microsecond=0)
+        return (today + timedelta(1))
+    else:
+        return str_datetime
 
 
 if __name__ == "__main__":
