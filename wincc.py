@@ -17,6 +17,7 @@ from operator_messages import om_query_builder, OperatorMessageRecord,\
 from report import generate_alarms_report, operator_messages_report
 from datetime import timedelta
 from collections import namedtuple
+import monkey_patch
 
 
 class WinCCException(Exception):

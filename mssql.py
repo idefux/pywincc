@@ -2,6 +2,7 @@ import adodbapi
 import logging
 
 from parameter import ParameterRecord, Parameter
+import monkey_patch
 
 class MsSQLException(Exception):
     def __init__(self, message=''):
@@ -11,8 +12,7 @@ class mssql():
     conn_str = "Provider=%(provider)s; Integrated Security=SSPI; Persist Security Info=False; Initial Catalog=%(database)s;Data Source=%(host)s"
     provider = 'SQLOLEDB.1'
 
-    def __init__(self, host, database=None):        
-        
+    def __init__(self, host, database=None):
         self.host = host
         self.database = database
         self.conn = None
@@ -97,21 +97,6 @@ class mssql():
         if self.conn:
             self.conn.close()
 
-
-# This here is ugly, I know. But i need to have a __unicode__ method in adodbapi.SQLrow
-# begin_ugly
-def adodbapi_SQLrow__unicode__(self):
-    """Extend adodbapi's SQLrow class with an __unicod__ function.
-    This is just a copy of the str method where I replaced the two occurences of 'str' by 'unicode'."""    
-    return unicode(tuple(unicode(self._getValue(i)) for i in range(self.rows.numberOfColumns)))
-
-def adodbapi_SQLrow__str__(self):
-    """Overwrite adodbapi's SQLrow classes __str__ function to fix unicode errors when attempting to print it"""
-    return unicode(self).encode('utf-8')
-
-adodbapi.SQLrow.__unicode__ = adodbapi_SQLrow__unicode__
-adodbapi.SQLrow.__str__ = adodbapi_SQLrow__str__
-# end_ugly
 
 if __name__ == "__main__":
     import doctest
