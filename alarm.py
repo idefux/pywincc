@@ -9,7 +9,7 @@ Alarm = namedtuple('Alarm',
 class AlarmRecord():
     """Class to hold alarm records returned by a WinCC mssql query"""
 
-    state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
+    state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK ', 16: 'GACK'}
 
     def __init__(self):
         self.alarms = []
@@ -25,8 +25,6 @@ class AlarmRecord():
                             "{type}.".format(type=type(alarm)))
 
     def __unicode__(self):
-        # return unicode([alarm for alarm in self.alarms])
-        self.state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK '}
         output = ""
         for alarm in self.alarms:
             if alarm.state in self.state_dict:

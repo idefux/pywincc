@@ -326,7 +326,7 @@ def do_batch_alarm_report(begin_day, end_day, host_address, database,
 
 
 def do_operator_messages_report(begin_time, end_time, host, database='',
-                                cache=False, use_cached=False):
+                                cache=False, use_cached=False, host_desc=''):
     if not use_cached:
         query = om_query_builder(begin_time, end_time)
         operator_messages = None
@@ -335,9 +335,7 @@ def do_operator_messages_report(begin_time, end_time, host, database='',
             w = wincc(host, database)
             w.connect()
             w.execute(query)
-            # w.print_operator_messages()
             operator_messages = w.create_operator_messages_record()
-            # print("Fetched data in {time}.".format(time=round(toc(),3)))
             if cache:
                 print("Caching!")
                 logging.debug("Writing operator_messages to %s",
@@ -361,7 +359,8 @@ def do_operator_messages_report(begin_time, end_time, host, database='',
         pkl_file.close()
 
     print("Generating HTML output...")
-    operator_messages_report(operator_messages, begin_time, end_time, 'AGRO ENERGIE Schwyz')
+    operator_messages_report(operator_messages, begin_time, end_time,
+                             host_desc)
 
 
 WinCCHost = namedtuple('WinCCHost',

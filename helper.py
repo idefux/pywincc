@@ -132,6 +132,14 @@ def tic():
     return (lambda: (time() - t))
 
 
+def today_as_datetime():
+    """Return today's date as datetime.datetime object.
+    Will look something like 'datetime.datetime(2015, 9, 9, 0, 0).
+    """
+    return datetime.now().replace(hour=0, minute=0,
+                                  second=0, microsecond=0)
+
+
 def eval_datetime(str_datetime):
     """Return datetime object for given string.
 
@@ -144,23 +152,24 @@ def eval_datetime(str_datetime):
     eval_datetime('today')
     """
     if str_datetime == 'today':
-        today = datetime.now().replace(hour=0, minute=0, second=0,
-                                       microsecond=0)
+        today = today_as_datetime()
         return today
     elif str_datetime == 'yesterday':
-        today = datetime.now().replace(hour=0, minute=0, second=0,
-                                       microsecond=0)
+        today = today_as_datetime()
         return (today - timedelta(1))
     elif str_datetime == 'yesterday-1':
-        today = datetime.now().replace(hour=0, minute=0, second=0,
-                                       microsecond=0)
+        today = today_as_datetime()
         return (today - timedelta(2))
     elif str_datetime == 'tomorrow':
-        today = datetime.now().replace(hour=0, minute=0, second=0,
-                                       microsecond=0)
+        today = today_as_datetime()
         return (today + timedelta(1))
     else:
         return str_datetime
+
+
+def remove_timezone(dt_datetime):
+    """Remove the timezone info from datetime object."""
+    return dt_datetime.replace(tzinfo=None)
 
 
 if __name__ == "__main__":

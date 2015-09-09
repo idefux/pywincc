@@ -1,6 +1,6 @@
 """ Helper Functions to handle WinCC Tag queries"""
 from helper import datetime_to_str, str_to_datetime, local_time_to_utc,\
-    utc_to_local
+    utc_to_local, remove_timezone
 from collections import namedtuple
 
 Tag = namedtuple('Tag', 'time value')
@@ -25,7 +25,7 @@ class TagRecord():
         xs = []
         ys = []
         for tag in self:
-            xs.append(tag.time)
+            xs.append(remove_timezone(tag.time))
             ys.append(tag.value)
         return xs, ys
 
@@ -57,12 +57,15 @@ class TagRecord():
 
 def plot_tag_records(tag_records):
     from matplotlib import pyplot
+    from matplotlib.dates import date2num
     pyplot.figure(1)
     num_rows = len(tag_records)
     num_cols = 1
     for i, records in enumerate(tag_records):
         pyplot.subplot(num_rows, num_cols, i+1)
-        pyplot.plot(records.get_xs_ys())
+        xs, ys = records.get_xs_ys()
+        #xs = date2num(xs)
+        pyplot.plot(xs, ys)
     pyplot.show()
 
 def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):

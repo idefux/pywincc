@@ -134,7 +134,8 @@ def tag(tagid, begin_time, end_time, timestep, mode, utc, show):
 @click.option('--mode', '-m', default='first', help="Optional mode. Can be first, last, min, max, avg, sum, count, and every mode with an '_interpolated' appended e.g. first_interpolated.")
 @click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
 @click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
-def tag2(tagid, begin_time, end_time, timestep, mode, utc, show):
+@click.option('--plot', '-p', default=False, is_flag=True, help="Open a window with the plotted data.")
+def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot):
     """Parse user friendly tag query and assemble userunfriendly wincc query"""
     query = tag_query_builder(tagid, begin_time, end_time, timestep, mode, utc)
     if show:
@@ -153,7 +154,8 @@ def tag2(tagid, begin_time, end_time, timestep, mode, utc, show):
         # tags.plot()
         for record in records:
             print(record)
-        #plot_tag_records(records)
+        if plot:
+            plot_tag_records(records)
 
     except Exception as e:
         print(e)
@@ -230,7 +232,8 @@ def alarms(begin_time, end_time, text, utc, show, state,
               help="Don't actually query the db. Just show what you would do.")
 def operator_messages(begin_time, end_time, text, utc, show):
     """Query db for operator messages."""
-    query = om_query_builder(begin_time, end_time, text, utc)
+    query = om_query_builder(eval_datetime(begin_time),
+                             eval_datetime(end_time), text, utc)
     if show:
         print(query)
         return
@@ -281,7 +284,8 @@ def tagid_by_name(tagname):
               help='Use cached alarms')
 def alarm_report(begin_time, end_time, cache, use_cached):
     """Print report of alarms for given host in given time."""
-    do_alarm_report(begin_time, end_time, host_info.address, host_info.database,
+    do_alarm_report(eval_datetime(begin_time), eval_datetime(end_time),
+                    host_info.address, host_info.database,
                     cache, use_cached)
 
 
@@ -294,8 +298,10 @@ def alarm_report(begin_time, end_time, cache, use_cached):
               help='Use cached alarms')
 def operator_messages_report(begin_time, end_time, cache, use_cached):
     """Print report of operator messages for given host in given time."""
-    do_operator_messages_report(begin_time, end_time, host_info.address,
-                                host_info.database, cache, use_cached)
+    do_operator_messages_report(eval_datetime(begin_time),
+                                eval_datetime(end_time),
+                                host_info.address, host_info.database,
+                                cache, use_cached)
 
 
 @cli.command()
@@ -303,8 +309,9 @@ def operator_messages_report(begin_time, end_time, cache, use_cached):
 @click.argument('end_day')
 def batch_report(begin_day, end_day):
     """Print a report for each day starting from begin_day to end_day."""
-    do_batch_alarm_report(begin_day, end_day, host_info.address,
-                          host_info.database, host_info.description)
+    do_batch_alarm_report(eval_datetime(begin_day), eval_datetime(end_day),
+                          host_info.address, host_info.database,
+                          host_info.description)
 
 
 @cli.command()
@@ -313,8 +320,9 @@ def batch_report(begin_day, end_day):
 @click.option('--timestep', '-t', help='Time interval [day|week|month].')
 def alarm_report2(begin_day, end_day, timestep):
     """Generate report(s) for known host."""
-    do_batch_alarm_report(begin_day, end_day, host_info.address,
-                          host_info.database, host_info.description, timestep)
+    do_batch_alarm_report(eval_datetime(begin_day), eval_datetime(end_day),
+                          host_info.address, host_info.database,
+                          host_info.description, timestep)
 
 
 @cli.command()
@@ -342,5 +350,6 @@ def strip_R_from_db_name(database):
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    #import doctest
+    #doctest.testmod()
+    cli()
