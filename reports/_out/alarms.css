@@ -36,24 +36,27 @@ h2, h3 {
     -moz-transform:scale(-1,1);
     -o-transform:scale(-1,1);
     }
-.alWARNING, .agWARNING {
-    color: #ffff00;
+.alWARNING, .agWARNING, .laWARNING {
+    color: #FFBF00;
 }
-.alERROR_DAY, .agERROR_DAY{
+.alERROR_DAY, .agERROR_DAY, .laERROR_DAY {
     color: #ff00ff;
 }
-.alERROR_NOW, .agERROR_NOW {
+.alERROR_NOW, .agERROR_NOW , .laERROR_NOW {
     color: #0000ff;
 }
-.alSTOP_ALL, .agSTOP_ALL {
+.alSTOP_ALL, .agSTOP_ALL , .laSTOP_ALL {
     color: #ff0000;
 }
-.alACK, .alGACK, .agACK, .agGACK {
+.alACK, .alGACK, .agACK, .agGACK , .laACK, .laGACK {
     color: #AAAAAA;
 }
-.alGO, .agGO {
+.alGO, .agGO, .laGO {
     color: #008080;
 }
 .hidden-row {
     display: none;
+}
+#form_alarm_filter {
+    background-color: #ffffff;
 }

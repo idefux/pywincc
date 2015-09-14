@@ -7,7 +7,7 @@
     <script src="alarms.js"></script>
     <link rel="stylesheet" href="alarms.css">
 </head>
-<body>
+<body onLoad="alarm_filter()">
     <div id="body">        
         <h2>Alarms Report {{plant}}</h2>
         <div class="column-left">
@@ -39,34 +39,35 @@
         <h4>Alarms</h4>
         <div id="indent">
             <div id="alarm_filter">
-                <form action="">
+                <form id="form_alarm_filter" action="">
                     <fieldset>
-                        <label for="check1">
+                        <label class="laWARNING" for="check1">
                           <input type="checkbox" name="alarm_priority" value="warning" id="check_warning" checked onClick="alarm_filter()">
                           WARNING
                         </label>
-                        <label for="check2">
+                        <label class="laERROR_DAY" for="check2">
                            <input type="checkbox" name="alarm_priority" value="error_day" id="check_error_day" checked onClick="alarm_filter()">
                           ERROR_DAY
                         </label>
-                        <label for="check3">
+                        <label class="laERROR_NOW" for="check3">
                           <input type="checkbox" name="alarm_priority" value="error_now" id="check_error_now" checked onClick="alarm_filter()">
                           ERROR_NOW
                         </label>
-                        <label for="check4">
+                        <label class="laSTOP_ALL" for="check4">
                           <input type="checkbox" name="alarm_priority" value="stop_all" id="check_stop_all" checked onClick="alarm_filter()">
                           STOP_ALL
                         </label>
-                        <label for="check5">
+                        <br/>
+                        <label class="laCOME" for="check5">
                           <input type="checkbox" name="alarm_state" value="come" id="check_come" checked onClick="alarm_filter()">
                           COME
                         </label>
-                        <label for="check6">
-                          <input type="checkbox" name="alarm_state" value="go" id="check_go" checked onClick="alarm_filter()">
+                        <label class="laGO" for="check6">
+                          <input type="checkbox" name="alarm_state" value="go" id="check_go" onClick="alarm_filter()">
                           GO
                         </label>
-                        <label for="check7">
-                          <input type="checkbox" name="alarm_state" value="ack_gack" id="check_ack_gack" checked onClick="alarm_filter()">
+                        <label class="laACK" for="check7">
+                          <input type="checkbox" name="alarm_state" value="ack_gack" id="check_ack_gack" onClick="alarm_filter()">
                           ACK/GACK
                         </label>
                       </fieldset>
