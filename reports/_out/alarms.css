@@ -1,0 +1,59 @@
+table, td, tr, th {
+    border: 1px solid grey;
+    border-collapse: collapse;
+    }
+td {
+    padding: 5px;
+    }
+#body {
+    width: 70%; margin: 0 auto;
+    }
+#alarms_grouped {
+    padding: 10px; background-color: #FFF;
+    }
+#alarms_log {
+    padding: 10px; background-color: #FFF;
+    }
+#indent {
+    background-color: #f1f1f1; padding: 15px;
+    }
+h2, h3 {
+    text-align: center;
+    }
+.column-left {
+    float: left; width: 15%;
+    }
+.column-center {
+    display: inline-block; width: 70%;
+    }
+.column-right {
+    float: right; width: 15%;
+    }
+.mirror { 
+    border:0;
+    display:inline-block,transform:scale(-1,1);
+    -webkit-transform:scale(-1,1);
+    -moz-transform:scale(-1,1);
+    -o-transform:scale(-1,1);
+    }
+.alWARNING, .agWARNING {
+    color: #ffff00;
+}
+.alERROR_DAY, .agERROR_DAY{
+    color: #ff00ff;
+}
+.alERROR_NOW, .agERROR_NOW {
+    color: #0000ff;
+}
+.alSTOP_ALL, .agSTOP_ALL {
+    color: #ff0000;
+}
+.alACK, .alGACK, .agACK, .agGACK {
+    color: #AAAAAA;
+}
+.alGO, .agGO {
+    color: #008080;
+}
+.hidden-row {
+    display: none;
+}
