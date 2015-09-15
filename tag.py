@@ -68,6 +68,7 @@ def plot_tag_records(tag_records):
         pyplot.plot(xs, ys)
     pyplot.show()
 
+
 def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):
     """Build the WinCC query string for reading tags
 

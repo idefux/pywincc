@@ -28,3 +28,24 @@ function alarm_filter() {
         $(".alSTOP_ALL").addClass("hidden-row");
     }
 }
+
+// https://stackoverflow.com/questions/2259690/how-to-get-the-arrow-keys-on-the-keyboard-to-trigger-navigation-previous-next-p
+function leftArrowPressed() {
+   document.getElementById('link-prev').click();
+}
+
+function rightArrowPressed() {
+   document.getElementById('link-next').click();
+}
+
+document.onkeydown = function(evt) {
+    evt = evt || window.event;
+    switch (evt.keyCode) {
+        case 37:
+            leftArrowPressed();
+            break;
+        case 39:
+            rightArrowPressed();
+            break;
+    }
+};

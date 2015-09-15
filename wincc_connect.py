@@ -4,7 +4,7 @@ import logging
 
 from wincc import wincc, WinCCException, do_alarm_report,\
     do_batch_alarm_report, do_operator_messages_report, WinCCHosts,\
-    get_host_by_name
+    get_host_by_name, do_alarm_report_monthly
 from alarm import alarm_query_builder
 from tag import tag_query_builder, print_tag_logging, plot_tag_records
 from interactive import InteractiveModeWinCC, InteractiveMode
@@ -136,7 +136,10 @@ def tag(tagid, begin_time, end_time, timestep, mode, utc, show):
 @click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
 @click.option('--plot', '-p', default=False, is_flag=True, help="Open a window with the plotted data.")
 def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot):
-    """Parse user friendly tag query and assemble userunfriendly wincc query"""
+    """Parse user friendly tag query input and assemble wincc tag query"""
+    if timestep and not end_time:
+        end_time = datetime_to_str_without_ms(datetime.now())
+
     query = tag_query_builder(tagid, begin_time, end_time, timestep, mode, utc)
     if show:
         print(query)
@@ -316,6 +319,13 @@ def batch_report(begin_day, end_day):
 
 @cli.command()
 @click.argument('begin_day')
+def alarm_report_monthly(begin_day):
+    do_alarm_report_monthly(begin_day, host_info.address, host_info.database,
+                            host_info.description)
+
+
+@cli.command()
+@click.argument('begin_day')
 @click.argument('end_day')
 @click.option('--timestep', '-t', help='Time interval [day|week|month].')
 def alarm_report2(begin_day, end_day, timestep):
@@ -334,6 +344,11 @@ def parameters():
     params = mssql_conn.create_parameter_record()
     mssql_conn.close()
     print(params)
+
+
+# @cli.command()
+# @click.argument('day')
+# def daily_perf_report(day):
 
 
 def strip_R_from_db_name(database):

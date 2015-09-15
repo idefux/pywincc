@@ -4,9 +4,18 @@ from time import time
 import logging
 
 
-def str_to_date(dt_str):
-    """Convert string of type "2015-08-27" to datetime object"""
-    return datetime.strptime(dt_str, '%Y-%m-%d').date()
+def str_to_date(date_str):
+    """Convert string to datetime object.
+    Allowed string formats '2015-09-15', '2015-09'.
+    '2015-09 will imply day 1.
+    """
+    if isinstance(date_str, date):
+        return date_str
+    try:
+        date_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        date_date = datetime.strptime(date_str, '%Y-%m').date()
+    return date_date
 
 
 def date_to_str(dt):
@@ -65,7 +74,7 @@ def str_to_datetime(dt_str):
     datetime.datetime(2015, 8, 21, 10, 23, 48, 672000)
 
     """
-    if isinstance(dt_str, datetime):
+    if isinstance(dt_str, datetime) or isinstance(dt_str, date):
         return dt_str
     try:
         t = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S.%f')
@@ -86,14 +95,13 @@ def str_to_datetime(dt_str):
 
 def local_time_to_utc(dt_in):
     """Transform given datetime object from local timezone to UTC."""
-    if isinstance(dt_in, str) or isinstance(dt_in, unicode):
+    if isinstance(dt_in, datetime):
+        dt = dt_in
+    elif isinstance(dt_in, str) or isinstance(dt_in, unicode):
         dt = str_to_datetime(dt_in)
-    elif not isinstance(dt_in, datetime):
+    else:
         raise TypeError("Wrong type. Expected: datetime or str. Got {type}."
                         .format(type=type(dt_in)))
-    else:
-        # datetime
-        dt = dt_in
 
     from_zone = tz.tzlocal()
     to_zone = tz.gettz('UTC')
@@ -147,7 +155,7 @@ def eval_datetime(str_datetime):
 
     Examples:
     >>> eval_datetime('2015-09-07')
-    datetime.datetime(2015, 9, 7, 0, 0)
+    '2015-09-07'
 
     eval_datetime('today')
     """
@@ -170,6 +178,23 @@ def eval_datetime(str_datetime):
 def remove_timezone(dt_datetime):
     """Remove the timezone info from datetime object."""
     return dt_datetime.replace(tzinfo=None)
+
+
+def get_next_month(dt_datetime):
+    """Return a datetime or date object incremented by 1 month.
+
+    Examples:
+    >>> get_next_month(datetime(2015,9,15))
+    datetime.datetime(2015, 10, 15, 0, 0)
+
+    >>> get_next_month(datetime(2015,12,7).date())
+    datetime.date(2016, 1, 7)
+    """
+    if dt_datetime.month < 12:
+        next_month = dt_datetime.replace(month=dt_datetime.month+1)
+    else:
+        next_month = dt_datetime.replace(year=dt_datetime.year+1, month=1)
+    return next_month
 
 
 if __name__ == "__main__":

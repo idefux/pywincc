@@ -3,4 +3,4 @@
 .pydevproject
 docs/_build/
 *.pkl
-reports/_out/
+reports/_out/*.html

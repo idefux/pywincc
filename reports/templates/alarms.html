@@ -11,14 +11,14 @@
     <div id="body">        
         <h2>Alarms Report {{plant}}</h2>
         <div class="column-left">
-            <a href="{{ link_prev_doc }}"><img src="images/go-next.ico" style="width: 50%; height: 50%;" class="mirror"/></a>
+            <a id="link-prev" href="{{ link_prev_doc }}"><img src="images/go-next.ico" style="width: 50%; height: 50%;" class="mirror"/></a>
         </div>
         <div class="column-center" style="padding: auto;">
         <h3>{{ date_str }}</h3>
         </div>
         <div class="column-right">
             <div align="right">
-                <a href="{{ link_next_doc }}"><img src="images/go-next.ico" style="width: 50%; height: 50%;" size="50%"/></a>
+                <a id="link-next" href="{{ link_next_doc }}"><img src="images/go-next.ico" style="width: 50%; height: 50%;" size="50%"/></a>
             </div>
         </div>
         

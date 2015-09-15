@@ -9,7 +9,8 @@ import os
 
 from mssql import mssql, MsSQLException
 from helper import datetime_to_str, utc_to_local, tic, str_to_date,\
-    daterange, date_to_str, datetime_to_str_without_ms
+    daterange, date_to_str, datetime_to_str_without_ms, get_next_month,\
+    str_to_datetime
 from alarm import Alarm, AlarmRecord, alarm_query_builder
 from tag import Tag, TagRecord
 from operator_messages import om_query_builder, OperatorMessageRecord,\
@@ -280,7 +281,7 @@ class wincc(mssql):
 def do_alarm_report(begin_time, end_time, host, database='',
                     cache=False, use_cached=False, host_desc=''):
     if not use_cached:
-        query = alarm_query_builder(begin_time, end_time, '', True, '')
+        query = alarm_query_builder(begin_time, end_time, '', False, '')
         alarms = None
         toc = tic()
         try:
@@ -323,6 +324,14 @@ def do_batch_alarm_report(begin_day, end_day, host_address, database,
                      dt_begin_day, dt_end_day)
         do_alarm_report(date_to_str(day), date_to_str(day + timedelta(timestep)),
                         host_address, database, host_desc=host_desc)
+
+
+def do_alarm_report_monthly(begin_day, host_address, database,
+                            host_desc):
+    begin_day = str_to_datetime(begin_day)
+    end_day = get_next_month(begin_day)
+    do_alarm_report(begin_day, end_day, host_address, database, False, False,
+                    host_desc)
 
 
 def do_operator_messages_report(begin_time, end_time, host, database='',
