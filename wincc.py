@@ -6,6 +6,8 @@ import re
 import pickle
 import traceback
 import os
+import multiprocessing
+from joblib import Parallel, delayed
 
 from mssql import mssql, MsSQLException
 from helper import datetime_to_str, utc_to_local, tic, str_to_date,\
@@ -280,6 +282,7 @@ class wincc(mssql):
 
 def do_alarm_report(begin_time, end_time, host, database='',
                     cache=False, use_cached=False, host_desc=''):
+    logging.debug("Doing alarm report for %s - %s", begin_time, end_time)
     if not use_cached:
         query = alarm_query_builder(begin_time, end_time, '', False, '')
         alarms = None
@@ -319,11 +322,17 @@ def do_batch_alarm_report(begin_day, end_day, host_address, database,
     dt_begin_day = str_to_date(begin_day)
     dt_end_day = str_to_date(end_day)
 
-    for day in daterange(dt_begin_day, dt_end_day):
-        logging.info('Trying to generate report for %s - %s.',
-                     dt_begin_day, dt_end_day)
-        do_alarm_report(date_to_str(day), date_to_str(day + timedelta(timestep)),
-                        host_address, database, host_desc=host_desc)
+    # for day in daterange(dt_begin_day, dt_end_day):
+    #     logging.info('Trying to generate report for %s - %s.',
+    #                  dt_begin_day, dt_end_day)
+    #     do_alarm_report(date_to_str(day), date_to_str(day + timedelta(timestep)),
+    #                     host_address, database, host_desc=host_desc)
+
+    # Based on the example from here: http://sebastianraschka.com/Articles/2014_multiprocessing_intro.html
+    num_cores = multiprocessing.cpu_count()
+    Parallel(n_jobs=num_cores)(delayed(do_alarm_report)
+                               (date_to_str(day), date_to_str(day + timedelta(timestep)), host_address, database, host_desc=host_desc)
+                               for day in daterange(dt_begin_day, dt_end_day))
 
 
 def do_alarm_report_monthly(begin_day, host_address, database,
