@@ -14,7 +14,7 @@ from helper import datetime_to_str, utc_to_local, tic, str_to_date,\
     daterange, date_to_str, datetime_to_str_without_ms, get_next_month,\
     str_to_datetime
 from alarm import Alarm, AlarmRecord, alarm_query_builder
-from tag import Tag, TagRecord
+from tag import Tag, TagRecord, tag_query_builder, plot_tag_records
 from operator_messages import om_query_builder, OperatorMessageRecord,\
     OperatorMessage
 from report import generate_alarms_report, operator_messages_report
@@ -230,7 +230,7 @@ class wincc(mssql):
     def create_tag_record(self):
         """Fetch tags from cursor and return a TagRecord object"""
         if self.rowcount():
-            tags = TagRecord()
+            #tags = TagRecord(tagid=rec['valueid'])
             for rec in self.fetchall():
                 datetime = utc_to_local(rec['timestamp'])
                 tags.push(Tag(datetime, rec['realvalue']))
@@ -381,8 +381,58 @@ def do_operator_messages_report(begin_time, end_time, host, database='',
                              host_desc)
 
 
-WinCCHost = namedtuple('WinCCHost',
-                       'hostname host_address database descriptive_name')
+def do_tag_report(host_info, begin_time, end_time, tagid, timestep, mode,
+                  utc=False, plot=False):
+    logging.info("Trying to generate tag report.")
+    query = tag_query_builder(tagid, begin_time, end_time, timestep, mode, utc)
+    logging.debug("Tag query: %s", query)
+
+    toc = tic()
+    try:
+        w = wincc(host_info.address, host_info.database)
+        w.connect()
+        w.execute(query)
+
+        logging.debug("Trying to create TagRecord(s).")
+        records = w.create_tag_records()
+        print("Fetched data in {time}.".format(time=round(toc(), 3)))
+        # print(tags)
+        # tags.plot()
+        for record in records:
+            print(record)
+        if plot:
+            logging.info("Trying to generate the plot. This may take some time.")
+            plot_tag_records(records)
+
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+    finally:
+        w.close()
+
+# WinCCHost = namedtuple('WinCCHost',
+#                       'hostname host_address database descriptive_name')
+
+
+class WinCCHost():
+
+    def __init__(self, hostname, host_address, database, descriptive_name,
+                 key_figures=''):
+        self.hostname = hostname
+        self.host_address = host_address
+        self.database = database
+        self.descriptive_name = descriptive_name
+        self.key_figures = key_figures
+
+    def __unicode__(self):
+        return u"{0}, {1}, {2}, {3}, {4}".format(self.hostname,
+                                                 self.host_address,
+                                                 self.database,
+                                                 self.descriptive_name,
+                                                 self.key_figures)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
 
 
 class WinCCHosts():
@@ -422,6 +472,15 @@ class WinCCHosts():
                           self.filename)
             return False
 
+#    def save_as_class(self):
+#        self.hostC = []
+#        for host in self.hosts:
+#            self.hostC.append(WinCCHostC(host.hostname, host.host_address,
+#                                    host.database, host.descriptive_name))
+#        with open(self.filename, 'wb') as fh:
+#            pickle.dump(self.hostC, fh)
+#            return True
+
     def add_host(self, hostname, host_address, database, descriptive_name):
         for host in self.hosts:
             if host.hostname.lower() == hostname.lower():
@@ -444,6 +503,15 @@ class WinCCHosts():
         for host in self.hosts:
             if host.hostname.lower() == hostname.lower():
                 return host
+        raise KeyError("Hostname {0} not found in hosts database."
+                       .format(hostname))
+
+    def add_key_figures(self, hostname, key_figures):
+        """Add a dict of key_figures to the host config."""
+        for host in self.hosts:
+            if host.hostname.lower() == hostname.lower():
+                host.key_figures = key_figures
+                return None
         raise KeyError("Hostname {0} not found in hosts database."
                        .format(hostname))
 

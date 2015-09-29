@@ -9,10 +9,12 @@ from alarm import alarm_query_builder
 from tag import tag_query_builder, print_tag_logging, plot_tag_records
 from interactive import InteractiveModeWinCC, InteractiveMode
 from operator_messages import om_query_builder
-from helper import tic, datetime_to_str_without_ms, eval_datetime
+from helper import tic, datetime_to_str_without_ms, eval_datetime,\
+    str_to_datetime
 from report import generate_alarms_report
 from datetime import datetime, timedelta
 from mssql import mssql
+from vas import get_daily_key_figures_avg
 
 
 class StringCP1252ParamType(click.ParamType):
@@ -346,9 +348,11 @@ def parameters():
     print(params)
 
 
-# @cli.command()
-# @click.argument('day')
-# def daily_perf_report(day):
+@cli.command()
+@click.argument('day')
+def daily_perf_report(day):
+    report_day = str_to_datetime(day)
+    get_daily_key_figures_avg(host_info, report_day)
 
 
 def strip_R_from_db_name(database):

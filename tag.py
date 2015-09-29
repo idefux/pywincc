@@ -30,9 +30,9 @@ class TagRecord():
         return xs, ys
 
     def __unicode__(self):
-        output = ""
+        output = u"{0}: {1}\n".format(self.tagid, self.name)
         for tag in self:
-            output += u"{time}: {value}\n".format(time=tag.time,
+            output += u"{time}: {value}\n".format(time=remove_timezone(tag.time),
                                                   value=tag.value)
         return output
 
@@ -98,7 +98,7 @@ def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):
         query = query[0:-1] + ")"
 
     if begin_time[0:4] == '0000':
-        #relative time
+        # relative time
         query += ",'{begin_time}'".format(begin_time=begin_time)
     else:
         dt_begin_time = str_to_datetime(begin_time)

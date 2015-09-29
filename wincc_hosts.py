@@ -77,3 +77,23 @@ def remove_host(hostname):
         print("Host successfully removed from list.")
     else:
         print("Host could not be found.")
+
+
+@cli.command()
+@click.argument('hostname')
+@click.argument('key_figures')
+def add_key_figures(hostname, key_figures):
+    """Return a list of key_figures connected to the host info."""
+    hosts = WinCCHosts()
+    print(key_figures)
+    key_figures_dict = eval(key_figures)
+    hosts.add_key_figures(hostname, key_figures_dict)
+    for host in hosts:
+        print(host)
+    # hosts.save_to_file()
+
+
+# @cli.command()
+# def translate():
+#     hosts = WinCCHosts()
+#     hosts.save_as_class()
