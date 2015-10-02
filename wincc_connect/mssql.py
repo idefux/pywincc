@@ -1,7 +1,7 @@
 import adodbapi
 import logging
 
-from parameter import ParameterRecord, Parameter
+from .parameter import ParameterRecord, Parameter
 import monkey_patch
 
 class MsSQLException(Exception):

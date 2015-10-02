@@ -13,7 +13,7 @@ Example:
 from __future__ import print_function
 import click
 import logging
-from wincc import WinCCHosts, wincc
+from .wincc import WinCCHosts, wincc
 
 
 @click.group()

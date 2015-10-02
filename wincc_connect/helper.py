@@ -136,8 +136,8 @@ def tic():
     //some code
     print(toc())
     """
-    t = time()
-    return (lambda: (time() - t))
+    now = time()
+    return lambda: (time() - now)
 
 
 def today_as_datetime():
@@ -146,6 +146,11 @@ def today_as_datetime():
     """
     return datetime.now().replace(hour=0, minute=0,
                                   second=0, microsecond=0)
+
+
+def yesterday_as_datetime():
+    """Return yesterday's date as datetime.datetime object."""
+    return today_as_datetime() - timedelta(1)
 
 
 def eval_datetime(str_datetime):

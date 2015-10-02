@@ -1,11 +1,11 @@
 import shlex
 import traceback
 import time
-#from wincc_mssql_connection import wincc_mssql_connection, WinCCException
-from wincc import wincc, WinCCException
-from mssql import mssql, MsSQLException
-from alarm import alarm_query_builder
-from operator_messages import om_query_builder
+# from wincc_mssql_connection import wincc_mssql_connection, WinCCException
+from .wincc import wincc, WinCCException
+from .mssql import mssql, MsSQLException
+from .alarm import alarm_query_builder
+from .operator_messages import om_query_builder
 
 
 class InteractiveModeWinCC():

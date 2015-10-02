@@ -8,18 +8,18 @@ import traceback
 import os
 import multiprocessing
 from joblib import Parallel, delayed
+from datetime import timedelta
+# from collections import namedtuple
 
-from mssql import mssql, MsSQLException
-from helper import datetime_to_str, utc_to_local, tic, str_to_date,\
+from .mssql import mssql, MsSQLException
+from .helper import datetime_to_str, utc_to_local, tic, str_to_date,\
     daterange, date_to_str, datetime_to_str_without_ms, get_next_month,\
     str_to_datetime
-from alarm import Alarm, AlarmRecord, alarm_query_builder
-from tag import Tag, TagRecord, tag_query_builder, plot_tag_records
-from operator_messages import om_query_builder, OperatorMessageRecord,\
+from .alarm import Alarm, AlarmRecord, alarm_query_builder
+from .tag import Tag, TagRecord, tag_query_builder, plot_tag_records
+from .operator_messages import om_query_builder, OperatorMessageRecord,\
     OperatorMessage
-from report import generate_alarms_report, operator_messages_report
-from datetime import timedelta
-from collections import namedtuple
+from .report import generate_alarms_report, operator_messages_report
 import monkey_patch
 
 
@@ -227,15 +227,15 @@ class wincc(mssql):
             return operator_messages
         return None
 
-    def create_tag_record(self):
-        """Fetch tags from cursor and return a TagRecord object"""
-        if self.rowcount():
-            #tags = TagRecord(tagid=rec['valueid'])
-            for rec in self.fetchall():
-                datetime = utc_to_local(rec['timestamp'])
-                tags.push(Tag(datetime, rec['realvalue']))
-            return tags
-        return None
+#    def create_tag_record(self):
+#        """Fetch tags from cursor and return a TagRecord object"""
+#        if self.rowcount():
+#            #tags = TagRecord(tagid=rec['valueid'])
+#            for rec in self.fetchall():
+#                datetime = utc_to_local(rec['timestamp'])
+#                tags.push(Tag(datetime, rec['realvalue']))
+#            return tags
+#        return None
 
     def create_tag_records(self):
         """Fetch tags from cursor and return a TagRecord objects.

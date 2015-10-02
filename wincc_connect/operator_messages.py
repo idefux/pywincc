@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from helper import local_time_to_utc, str_to_datetime, datetime_to_str_without_ms
+from .helper import local_time_to_utc, str_to_datetime, datetime_to_str_without_ms
 from collections import namedtuple
 
 OperatorMessage = namedtuple('OperatorMessage', 'datetime parameter parameter_translated old_value new_value username')

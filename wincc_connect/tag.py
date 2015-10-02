@@ -1,5 +1,5 @@
 """ Helper Functions to handle WinCC Tag queries"""
-from helper import datetime_to_str, str_to_datetime, local_time_to_utc,\
+from .helper import datetime_to_str, str_to_datetime, local_time_to_utc,\
     utc_to_local, remove_timezone
 from collections import namedtuple
 
