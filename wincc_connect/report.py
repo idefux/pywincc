@@ -3,6 +3,7 @@ from .helper import str_to_datetime, datetime_to_str_without_ms, datetime_to_str
     date_to_str, datetime_is_date, date_to_str_underscores
 import logging
 from datetime import timedelta
+import os
 
 
 def make_date_str(dt_begin_time, dt_end_time):
@@ -15,6 +16,9 @@ def make_date_str(dt_begin_time, dt_end_time):
 def generate_alarms_report(alarms, begin_time, end_time,
                            host_description='', filter_text=''):
 
+    script_dir = os.path.realpath(__name__).split(__name__)[0]
+    logging.debug("Changing to script dir %s", script_dir)
+    os.chdir(script_dir)
     env = Environment(loader=FileSystemLoader('./reports/templates/'))
     template = env.get_template("alarms.html")
 
@@ -61,6 +65,9 @@ def generate_alarms_report(alarms, begin_time, end_time,
 
 
 def generate_alarms_report2(alarms, begin_day, end_day, host_desc='', timestep=1):
+    script_dir = os.path.realpath(__name__).split(__name__)[0]
+    logging.debug("Changing to script dir %s", script_dir)
+    os.chdir(script_dir)
     env = Environment(loader=FileSystemLoader('./reports/templates/'))
     template = env.get_template("alarms2.html")
 

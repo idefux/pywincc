@@ -318,22 +318,21 @@ def do_alarm_report(begin_time, end_time, host, database='',
 
 
 def do_batch_alarm_report(begin_day, end_day, host_address, database,
-                          host_desc='', timestep=1):
+                          host_desc='', timestep=1, parallel=False):
     dt_begin_day = str_to_date(begin_day)
     dt_end_day = str_to_date(end_day)
-
-    # for day in daterange(dt_begin_day, dt_end_day):
-    #     logging.info('Trying to generate report for %s - %s.',
-    #                  dt_begin_day, dt_end_day)
-    #     do_alarm_report(date_to_str(day), date_to_str(day + timedelta(timestep)),
-    #                     host_address, database, host_desc=host_desc)
-
+    if parallel:
     # Based on the example from here: http://sebastianraschka.com/Articles/2014_multiprocessing_intro.html
-    num_cores = multiprocessing.cpu_count()
-    Parallel(n_jobs=num_cores)(delayed(do_alarm_report)
-                               (date_to_str(day), date_to_str(day + timedelta(timestep)), host_address, database, host_desc=host_desc)
-                               for day in daterange(dt_begin_day, dt_end_day))
-
+        num_cores = multiprocessing.cpu_count()
+        Parallel(n_jobs=num_cores)(delayed(do_alarm_report)
+                                   (date_to_str(day), date_to_str(day + timedelta(timestep)), host_address, database, host_desc=host_desc)
+                                   for day in daterange(dt_begin_day, dt_end_day))
+    else:
+        for day in daterange(dt_begin_day, dt_end_day):
+            logging.info('Trying to generate report for %s - %s.',
+                         begin_day, end_day)
+            do_alarm_report(date_to_str(day), date_to_str(day + timedelta(timestep)),
+                            host_address, database, host_desc=host_desc)
 
 def do_alarm_report_monthly(begin_day, host_address, database,
                             host_desc):
@@ -450,6 +449,7 @@ class WinCCHosts():
 
     def load_from_file(self):
         try:
+            logging.debug("Current directory %s", os.getcwd())
             logging.info("Trying to open file %s for loading stored hosts.",
                          self.filename)
             with open(self.filename, 'rb') as fh:
