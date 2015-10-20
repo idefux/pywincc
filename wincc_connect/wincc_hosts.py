@@ -75,6 +75,7 @@ def remove_host(hostname):
     hosts.load_from_file()
     if hosts.remove_host(hostname):
         print("Host successfully removed from list.")
+        hosts.save_to_file()
     else:
         print("Host could not be found.")
 

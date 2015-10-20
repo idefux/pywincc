@@ -202,15 +202,14 @@ class wincc(mssql):
 
     def create_alarm_record(self):
         """Fetches alarms from cursor and returns an AlarmRecord object"""
+        alarms = AlarmRecord()
         if self.rowcount():
-            alarms = AlarmRecord()
             for rec in self.fetchall():
                 datetime = datetime_to_str(utc_to_local(rec['DateTime']))
                 alarms.push(Alarm(rec['MsgNr'], rec['State'], datetime,
                                   rec['Classname'], rec['Typename'],
                                   rec['Text2'], rec['Text1']))
-            return alarms
-        return None
+        return alarms
 
     def create_operator_messages_record(self):
         """
