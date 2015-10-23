@@ -16,7 +16,8 @@ from .helper import datetime_to_str, utc_to_local, tic, str_to_date,\
     daterange, date_to_str, datetime_to_str_without_ms, get_next_month,\
     str_to_datetime
 from .alarm import Alarm, AlarmRecord, alarm_query_builder
-from .tag import Tag, TagRecord, tag_query_builder, plot_tag_records
+from .tag import Tag, TagRecord, tag_query_builder, plot_tag_records, \
+    plot_tag_records2
 from .operator_messages import om_query_builder, OperatorMessageRecord,\
     OperatorMessage
 from .report import generate_alarms_report, operator_messages_report
@@ -236,9 +237,27 @@ class wincc(mssql):
 #            return tags
 #        return None
 
+    def create_tag_record(self):
+        """Fetch tag from cursor and return a TagRecord objects.
+        Use this if you queried for a single tagid.
+        """
+        if self.rowcount():
+            # Fetch first record and write tagrecord.tagid property
+            tag_record = TagRecord()
+            rec = self.fetchone()
+            tag_record.tagid = rec['valueid']
+            datetime = utc_to_local(rec['timestamp'])
+            tag_record.push(Tag(datetime, rec['realvalue']))
+            # Fetch rest from cursor
+            for rec in self.fetchall():
+                datetime = utc_to_local(rec['timestamp'])
+                tag_record.push(Tag(datetime, rec['realvalue']))
+            return tag_record
+        return None
+
     def create_tag_records(self):
-        """Fetch tags from cursor and return a TagRecord objects.
-        This is experimental to test handling of multiple records in cursor.
+        """Fetch tags from cursor and return a list of TagRecord objects.
+        Only use this if you queried for multiple tagids.
         """
         tag_records = []
         p_rec = -1
@@ -321,7 +340,8 @@ def do_batch_alarm_report(begin_day, end_day, host_address, database,
     dt_begin_day = str_to_date(begin_day)
     dt_end_day = str_to_date(end_day)
     if parallel:
-    # Based on the example from here: http://sebastianraschka.com/Articles/2014_multiprocessing_intro.html
+        # Based on the example from here: http://sebastianraschka.com/\
+        # Articles/2014_multiprocessing_intro.html
         num_cores = multiprocessing.cpu_count()
         Parallel(n_jobs=num_cores)(delayed(do_alarm_report)
                                    (date_to_str(day), date_to_str(day + timedelta(timestep)), host_address, database, host_desc=host_desc)
@@ -332,6 +352,7 @@ def do_batch_alarm_report(begin_day, end_day, host_address, database,
                          begin_day, end_day)
             do_alarm_report(date_to_str(day), date_to_str(day + timedelta(timestep)),
                             host_address, database, host_desc=host_desc)
+
 
 def do_alarm_report_monthly(begin_day, host_address, database,
                             host_desc):
@@ -379,34 +400,77 @@ def do_operator_messages_report(begin_time, end_time, host, database='',
                              host_desc)
 
 
-def do_tag_report(host_info, begin_time, end_time, tagid, timestep, mode,
-                  utc=False, plot=False):
-    logging.info("Trying to generate tag report.")
-    query = tag_query_builder(tagid, begin_time, end_time, timestep, mode, utc)
-    logging.debug("Tag query: %s", query)
-
+def get_tag_record(host_info, begin_time, end_time, tagid, timestep,
+                   mode, utc=False):
+    """Query the DB for a single tag record and return a TagRecord object"""
     toc = tic()
+    query = tag_query_builder(tagid, begin_time, end_time, timestep, mode, utc)
+    tag_record = None
     try:
         w = wincc(host_info.address, host_info.database)
         w.connect()
         w.execute(query)
-
-        logging.debug("Trying to create TagRecord(s).")
-        records = w.create_tag_records()
+        tag_record = w.create_tag_record()
         print("Fetched data in {time}.".format(time=round(toc(), 3)))
-        # print(tags)
-        # tags.plot()
-        for record in records:
-            print(record)
-        if plot:
-            logging.info("Trying to generate the plot. This may take some time.")
-            plot_tag_records(records)
-
     except Exception as e:
         print(e)
         print(traceback.format_exc())
     finally:
         w.close()
+    return tag_record
+
+
+def get_multiple_tag_records(host_info, begin_time, end_time, tagids, timestep,
+                             mode, utc=False, parallel=True):
+    """Query the DB for multiple tag records."""
+    logging.info("get_tag_records: Trying to get tag records for %s",
+                 ', '.join([str(tagid) for tagid in tagids]))
+    tag_records = None
+    if parallel:
+        logging.debug("get_tag_records: Parallel mode is ON")
+        num_cores = multiprocessing.cpu_count()
+        logging.debug("Operating on %s cores", num_cores)
+        tag_records = Parallel(n_jobs=num_cores)(delayed(get_tag_record)
+                              (host_info, begin_time, end_time, [tagid], 3600, 'avg')
+                              for tagid in tagids)
+    else:
+        logging.debug("get_tag_records: Parallel mode is OFF")
+        toc = tic()
+        query = tag_query_builder(tagids, begin_time, end_time, timestep, mode,
+                                  utc)
+        try:
+            w = wincc(host_info.address, host_info.database)
+            w.connect()
+            w.execute(query)
+            tag_records = w.create_tag_records()
+            print("Fetched data in {time}.".format(time=round(toc(), 3)))
+        except Exception as e:
+            print(e)
+            print(traceback.format_exc())
+        finally:
+            w.close()
+    return tag_records
+
+
+def do_tag_report(host_info, begin_time, end_time, tagids, timestep, mode,
+                  utc=False, plot=False, plot_config=None):
+    logging.info("Trying to generate tag report.")
+
+    if isinstance(tagids, list):
+        records = get_multiple_tag_records(host_info, begin_time, end_time,
+                                           tagids, timestep, mode,
+                                           utc, parallel=True)
+    else:
+        # Assume it's a string
+        records = []
+        records.append(get_tag_record(host_info, begin_time, end_time, tagids,
+                                      timestep, mode, utc))
+    for record in records:
+        print(record)
+    if plot:
+        logging.info("Trying to generate the plot. This may take some time.")
+        plot_tag_records2(records, save=True, plot_config=plot_config)
+
 
 # WinCCHost = namedtuple('WinCCHost',
 #                       'hostname host_address database descriptive_name')

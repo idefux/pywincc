@@ -131,12 +131,21 @@ def tag(tagid, begin_time, end_time, timestep, mode, utc, show):
 @cli.command()
 @click.argument('tagid', nargs=-1)
 @click.argument('begin_time', nargs=1)
-@click.option('--end-time', '-e', default='', help='Can be absolute (see begin-time) or relative 0000-00-01[ 12:00:00[.000]]')
-@click.option('--timestep', '-t', default=0, help='Group result in timestep long sections. Time in seconds.')
-@click.option('--mode', '-m', default='first', help="Optional mode. Can be first, last, min, max, avg, sum, count, and every mode with an '_interpolated' appended e.g. first_interpolated.")
-@click.option('--utc', default=False, is_flag=True, help='Activate utc time. Otherwise local time is used.')
-@click.option('--show', '-s', default=False, is_flag=True, help="Don't actually query the db. Just show what you would do.")
-@click.option('--plot', '-p', default=False, is_flag=True, help="Open a window with the plotted data.")
+@click.option('--end-time', '-e', default='',
+              help='Can be absolute (see begin-time) or relative \
+              0000-00-01[ 12:00:00[.000]]')
+@click.option('--timestep', '-t', default=0,
+              help='Group result in timestep long sections. Time in seconds.')
+@click.option('--mode', '-m', default='first',
+              help="Optional mode. Can be first, last, min, max, avg, sum, \
+              count, and every mode with an '_interpolated' appended e.g. \
+              first_interpolated.")
+@click.option('--utc', default=False, is_flag=True,
+              help='Activate utc time. Otherwise local time is used.')
+@click.option('--show', '-s', default=False, is_flag=True,
+              help="Don't actually query the db. Just show what you would do.")
+@click.option('--plot', '-p', default=False, is_flag=True,
+              help="Open a window with the plotted data.")
 def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot):
     """Parse user friendly tag query input and assemble wincc tag query"""
     if timestep and not end_time:
@@ -172,7 +181,8 @@ def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot):
 @cli.command()
 @click.argument('begin_time')
 @click.option('--end-time', '-e', default='',
-              help='Can be absolute (see begin-time) or relative 0000-00-01[ 12:00:00[.000]]')
+              help='Can be absolute (see begin-time) or relative \
+              0000-00-01[ 12:00:00[.000]]')
 @click.option('--text', default='', type=STRING_CP1252,
               help='Message text or part of message text.')
 @click.option('--utc', default=False, is_flag=True,

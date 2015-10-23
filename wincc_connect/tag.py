@@ -55,18 +55,98 @@ class TagRecord():
         pyplot.show()
 
 
-def plot_tag_records(tag_records):
+def plot_tag_records(tag_records, show=True, save=False):
     from matplotlib import pyplot
-    from matplotlib.dates import date2num
-    pyplot.figure(1)
+    from numpy import mean
+    # from matplotlib.dates import date2num
+    fig = pyplot.figure(1, figsize=(11.692, 8.267))
     num_rows = len(tag_records)
     num_cols = 1
     for i, records in enumerate(tag_records):
         pyplot.subplot(num_rows, num_cols, i+1)
         xs, ys = records.get_xs_ys()
-        #xs = date2num(xs)
-        pyplot.plot(xs, ys)
-    pyplot.show()
+        ys_mean = [mean(ys) for i in xs]
+        # xs = date2num(xs)
+        pyplot.plot(xs, ys, label=records.tagid, marker='o')
+        pyplot.plot(xs, ys_mean, label='mean', linestyle='--')
+        pyplot.legend()
+    # fig = pyplot.gcf()
+    if save:
+        filename = ''
+        for i, records in enumerate(tag_records):
+            if i > 0:
+                filename += '-'
+            filename += str(records.tagid)
+        filename_png = filename + '.png'
+        filename_pdf = filename + '.pdf'
+        fig.savefig(filename_png)
+        fig.savefig(filename_pdf)
+    if show:
+        pyplot.show()
+
+
+def plot_tag_records2(tag_records, plot_config=None, show=True, save=False):
+    """Plot given tag_records."""
+    from matplotlib import pyplot
+    from numpy import mean
+    num_figures = len(plot_config["figures"])
+    figures = [None for _ in range(num_figures)]
+    axes = [[] for _ in range(num_figures)]
+    for figure_num in range(num_figures):
+        fig, ax = pyplot.subplots(figsize=(11.692, 8.267))
+        # figures.append(pyplot.figure(figsize=(11.692, 8.267)))
+        figures[figure_num] = fig
+        ax_ymin = plot_config["axes"][0]["min"]
+        ax_ymax = plot_config["axes"][0]["max"]
+        ax.set_ylim([ax_ymin, ax_ymax])
+        axes[figure_num] = [ax]
+        num_axes = plot_config["figures"][figure_num]["num_axes"]
+        for axis_num in range(1, num_axes):
+            new_ax = ax.twinx()
+            ax_ymin = plot_config["axes"][axis_num]["min"]
+            ax_ymax = plot_config["axes"][axis_num]["max"]
+            new_ax.set_ylim([ax_ymin, ax_ymax])
+            axes[figure_num].append(new_ax)
+    # num_axes = len(plot_config["axes"])
+    # fig, ax1 = pyplot.subplots(nrows=1, ncols=1,
+    #                            figsize=(11.692, 8.267))
+
+    # for figure_num, figure in enumerate(figures):
+    #     num_axes = plot_config["figures"][figure_num]["num_axes"]
+    #     figures[figure_num].add_subplot(1,1,1)
+    #     for axis_num in range(num_axes):
+    #         for i, record in enumerate(tag_records):
+    #             tagid = record.tagid
+    #             tagid_config = plot_config["tags"][tagid]
+    #             if (tagid_config["figure_num"] == figure_num and
+    #                 tagid_config[figure_num]["axis_num"] == axis_num):
+    #                     if axis_num == 0:
+
+    for i, records in enumerate(tag_records):
+        xs, ys = records.get_xs_ys()
+        ys_mean = [mean(ys) for _ in xs]
+        tagid = str(records.tagid)
+        figure_num = plot_config["tags"][tagid]["figure_num"]
+        axis_num = plot_config["tags"][tagid]["axis_num"]
+        tag_name = plot_config["tags"][tagid]["name"]
+        ax = axes[figure_num][axis_num]
+        ax.plot(xs, ys, label=tag_name, marker='o')
+        ax.plot(xs, ys_mean, label='mean', linestyle='--')
+        ax.legend()
+    if save:
+        filename = ''
+        for i, records in enumerate(tag_records):
+            if i > 0:
+                filename += '-'
+            filename += str(records.tagid)
+        for figure_num, figure in enumerate(figures):
+            filename_png = filename + "_" + str(figure_num) + '.png'
+            filename_pdf = filename + "_" + str(figure_num) + '.pdf'
+            figure.savefig(filename_png)
+            figure.savefig(filename_pdf)
+    if show:
+        for figure in figures:
+            figure.show()
 
 
 def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):

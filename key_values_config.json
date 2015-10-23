@@ -1,0 +1,39 @@
+{
+    "tags": {
+        "729": {
+                "name": "ORC1_TURB_GEP",
+                "figure_num": 0,
+                "axis_num": 0
+        },
+        "878": {
+                "name": "BMK1_BK_TEMP_IW",
+                "figure_num": 0,
+                "axis_num": 0
+        },
+        "797": {
+                "name": "TOE1_POWER",
+                "figure_num": 0,
+                "axis_num": 1
+        },
+        "10": {
+                "name": "BMK1_FUZZ_POWER",
+                "figure_num": 0,
+                "axis_num": 1
+        }
+    },
+    "figures": [
+        {
+            "num_axes": 2
+        }
+    ],
+    "axes": [
+              {
+                        "min": 0,
+                        "max": 1600
+              },
+              {
+                        "min": 0,
+                        "max": 200
+              }
+    ]
+}
