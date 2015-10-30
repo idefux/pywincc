@@ -42,7 +42,6 @@ class wincc(mssql):
         Microsoft OLEDB Provider first. You can save some time by passing \
         database name here.
         """
-
         if host.find(r'\WINCC') == -1:
             host += r'\WINCC'
             logging.info(r"Missing instance name at hostname. Appending\
@@ -68,10 +67,16 @@ class wincc(mssql):
         try:
             logging.info("Trying to connect to %s database %s", self.host,
                          self.database)
+            # Python looses it's current working dir in the next instruction
+            # Reset after connect
+            curr_dir  = os.getcwd()
+
             self.conn = adodbapi.connect(self.conn_str,
                                          provider=self.provider,
                                          host=self.host,
                                          database=self.database)
+
+            os.chdir(curr_dir)
             self.cursor = self.conn.cursor()
 
         except (adodbapi.DatabaseError, adodbapi.InterfaceError) as e:
@@ -331,7 +336,6 @@ def do_alarm_report(begin_time, end_time, host, database='',
         pkl_file = open('alarms.pkl', 'rb')
         alarms = pickle.load(pkl_file)
         pkl_file.close()
-
     generate_alarms_report(alarms, begin_time, end_time, host_desc, '')
 
 
