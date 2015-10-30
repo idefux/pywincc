@@ -1,7 +1,8 @@
-WinCC MS SQL Connection
+WinCC Connect
 =======================
 
 This python module provides access to the Microsoft SQL Server 2005 database underlying Siemens WinCC.
+Tested with WinCC 7.0.
 
 ## Functions
 
@@ -22,7 +23,7 @@ This python module provides access to the Microsoft SQL Server 2005 database und
     * WinCC Connectivity Pack Client or Connectivity Station(?)
     * Modify the registry (see below)
 
-### Registry modification
+#### Registry modification
 In order to enable the adodbapi module to work with the WINCCOLEDBProvider.1 proceed as follows.
 Open 'regedit' and search for 'WINCCOLEDBProvider'. The first result should lead to  
 HKEY_LOCAL_MACHINE - SOFTWARE - Classes - CLSID - Some string (e.g. {3EE5243C-3779-4545-A573-F60ABC436816}).

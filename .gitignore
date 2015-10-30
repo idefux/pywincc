@@ -4,3 +4,4 @@
 docs/_build/
 *.pkl
 reports/_out/*.html
+old/
