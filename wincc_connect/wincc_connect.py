@@ -322,13 +322,13 @@ def operator_messages_report(begin_time, end_time, cache, use_cached):
 @cli.command()
 @click.argument('begin_day')
 @click.argument('end_day')
-@click.option('--parallel', '-p', is_flag=True, default=False,
+@click.option('--non-parallel', '-np', is_flag=True, default=False,
               help='Use multithreading for parallel queries.')
-def batch_report(begin_day, end_day, parallel):
+def batch_report(begin_day, end_day, non_parallel):
     """Print a report for each day starting from begin_day to end_day."""
     do_batch_alarm_report(eval_datetime(begin_day), eval_datetime(end_day),
                           host_info.address, host_info.database,
-                          host_info.description, parallel=parallel)
+                          host_info.description, parallel=not non_parallel)
 
 
 @cli.command()

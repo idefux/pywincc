@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="alarms.css">
 </head>
 <body onLoad="alarm_filter()">
-    <div id="body">        
+    <div id="body">
         <h2>Alarms Report {{plant}}</h2>
         <div class="column-left">
             <a id="link-prev" href="{{ link_prev_doc }}"><img src="images/go-next.ico" style="width: 50%; height: 50%;" class="mirror"/></a>
@@ -21,10 +21,10 @@
                 <a id="link-next" href="{{ link_next_doc }}"><img src="images/go-next.ico" style="width: 50%; height: 50%;" size="50%"/></a>
             </div>
         </div>
-        
+
         <h4>{{ filter_text }}</h4>
         <h4>Alarms 'Come' grouped by priority</h4>
-        <div id="indent">
+        <div class="indent">
             <div id="alarms_grouped">
                 <table>
                     <tr><th>Priority</th><th>Count</th></tr>
@@ -32,12 +32,12 @@
                     <tr><td class="agERROR_DAY">ERROR_DAY</td><td>{{ count['error_day'] }}</td></tr>
                     <tr><td class="agERROR_NOW">ERROR_NOW</td><td>{{ count['error_now'] }}</td></tr>
                     <tr><td class="agSTOP_ALL">STOP_ALL</td><td>{{ count['stop_all'] }}</td></tr>
-                    <tr><td>SUM</td><td>{{ count['sum'] }}</td></tr></table>
+                    <tr><td>SUM</td><td>{{ count['sum'] }}</td></tr>
                 </table>
             </div>
         </div>
         <h4>Alarms</h4>
-        <div id="indent">
+        <div class="indent">
             <div id="alarm_filter">
                 <form id="form_alarm_filter" action="">
                     <fieldset>
@@ -76,12 +76,25 @@
             <div id="alarms_log">
             <table>
                 <tr><th>ID</th><th>Datetime</th><th>State</th><th>Priority</th><th>Location</th><th>Text</th></tr>
-                {% for alarm in alarms %}            
+                {% for alarm in alarms %}
                     <tr class="al{{ alarm.priority }} al{{ state_dict[alarm.state] }}"><td>{{ alarm.id }}</td><td>{{ alarm.datetime }}</td><td>{{ state_dict[alarm.state] }}</td><td>{{ alarm.priority }}</td><td>{{ alarm.location }}</td><td>{{ alarm.text }}</td></tr>
                 {% endfor %}
             </table>
             </div>
         </div>
+        {% if operator_messages %}
+        <h4>Operator messages</h4>
+        <div class="indent">
+            <div id="operator_messages_log">
+                <table>
+                <tr><th>Datetime</th><th>Parameter</th><th>Old value</th><th>New value</th><th>Username</th></tr>
+                {% for op in operator_messages %}
+                    <tr><td>{{ op.datetime }}</td><td>{% if op.parameter_translated %}{{ op.parameter_translated }}{% else %}{{op.parameter}}{% endif %}</td><td>{{ op.old_value }}</td><td>{{ op.new_value }}</td><td>{{ op.username }}</td></tr>
+                {% endfor %}
+                </table>
+            </div>
+        </div>
+        {% endif %}
      </div>
 </body>
 </html>

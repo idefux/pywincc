@@ -14,8 +14,8 @@ def make_date_str(dt_begin_time, dt_end_time):
 
 
 def generate_alarms_report(alarms, begin_time, end_time,
-                           host_description='', filter_text=''):
-
+                           host_description='', filter_text='',
+                           operator_messages=None):
     script_dir = os.path.realpath(__name__).split(__name__)[0]
     logging.debug("Changing to script dir %s", script_dir)
     os.chdir(script_dir)
@@ -54,7 +54,8 @@ def generate_alarms_report(alarms, begin_time, end_time,
                      "date_str": date_str,
                      "filter_text": filter_text_out,
                      "link_prev_doc": link_prev,
-                     "link_next_doc": link_next}
+                     "link_next_doc": link_next,
+                     "operator_messages": operator_messages}
 
     html_out = template.render(template_vars)
 

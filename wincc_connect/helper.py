@@ -202,6 +202,11 @@ def get_next_month(dt_datetime):
     return next_month
 
 
+def datetime_to_syslog_timestamp(time):
+    """Take a datetime object and return a string for syslog."""
+    return time.strftime('%b %d %H:%M:%S')
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

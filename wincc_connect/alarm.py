@@ -27,10 +27,7 @@ class AlarmRecord():
     def __unicode__(self):
         output = ""
         for alarm in self.alarms:
-            if alarm.state in self.state_dict:
-                state = self.state_dict[alarm.state]
-            else:
-                state = alarm.state
+            state = self.alarm_state_as_text(alarm)
             output += u"{a.id} {state:4} ".format(a=alarm, state=state)
             output += u"{a.datetime} {a.priority:9} ".format(a=alarm)
             output += u"{a.location:14} {a.text}\n".format(a=alarm)
@@ -41,6 +38,13 @@ class AlarmRecord():
 
     def __iter__(self):
         return iter(self.alarms)
+
+    def alarm_state_as_text(self, alarm):
+        if alarm.state in self.state_dict:
+            state = self.state_dict[alarm.state]
+        else:
+            state = alarm.state
+        return state
 
     def count_all(self):
         """Return number of alarms in record."""
@@ -109,7 +113,7 @@ class AlarmRecord():
                 'sum': self.count_come()}
 
 
-def alarm_query_builder(begin_time, end_time, msg_text, utc, state):
+def alarm_query_builder(begin_time, end_time, msg_text='', utc=False, state=''):
     """Build wincc alarm query string
 
     >>> alarm_query_builder("2015-08-24 10:07:48", "2015-08-24 10:08:12", '', False, '')

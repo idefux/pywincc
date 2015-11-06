@@ -11,6 +11,9 @@ class OperatorMessageRecord():
     def __init__(self):
         self.operator_messages = []
 
+    def __iter__(self):
+        return iter(self.operator_messages)
+
     def push(self, operator_message):
         if isinstance(operator_message, OperatorMessage):
             self.operator_messages.append(operator_message)
@@ -42,7 +45,7 @@ class OperatorMessageRecord():
         for om in self.operator_messages:
             html += u"<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>\n".format(om.datetime, self.__get_parameter(om), om.old_value, om.new_value, om.username)
         html += u"</table>\n"
-        return html  
+        return html
 
 
 def om_query_builder(begin_time, end_time='', msg_text='', utc=False):

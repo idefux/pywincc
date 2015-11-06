@@ -221,16 +221,15 @@ class wincc(mssql):
         """
         Fetches operator messages from cursor.
         Return them as OperatorMessageRecord object"""
+        operator_messages = OperatorMessageRecord()
         if self.rowcount():
-            operator_messages = OperatorMessageRecord()
             for rec in self.fetchall():
                 datetime = datetime_to_str(utc_to_local(rec['DateTime']))
                 op = OperatorMessage(datetime, rec['PText1'], rec['PText4'],
                                      rec['PText2'], rec['PText3'],
                                      rec['Username'])
                 operator_messages.push(op)
-            return operator_messages
-        return None
+        return operator_messages
 
 #    def create_tag_record(self):
 #        """Fetch tags from cursor and return a TagRecord object"""
@@ -246,9 +245,9 @@ class wincc(mssql):
         """Fetch tag from cursor and return a TagRecord objects.
         Use this if you queried for a single tagid.
         """
+        tag_record = TagRecord()
         if self.rowcount():
             # Fetch first record and write tagrecord.tagid property
-            tag_record = TagRecord()
             rec = self.fetchone()
             tag_record.tagid = rec['valueid']
             datetime = utc_to_local(rec['timestamp'])
@@ -257,8 +256,7 @@ class wincc(mssql):
             for rec in self.fetchall():
                 datetime = utc_to_local(rec['timestamp'])
                 tag_record.push(Tag(datetime, rec['realvalue']))
-            return tag_record
-        return None
+        return tag_record
 
     def create_tag_records(self):
         """Fetch tags from cursor and return a list of TagRecord objects.
@@ -304,7 +302,8 @@ class wincc(mssql):
 
 
 def do_alarm_report(begin_time, end_time, host, database='',
-                    cache=False, use_cached=False, host_desc=''):
+                    cache=False, use_cached=False, host_desc='',
+                    with_operator_messages=False):
     logging.debug("Doing alarm report for %s - %s", begin_time, end_time)
     if not use_cached:
         query = alarm_query_builder(begin_time, end_time, '', False, '')
@@ -323,6 +322,13 @@ def do_alarm_report(begin_time, end_time, host, database='',
                 pkl_file = open('alarms.pkl', 'wb')
                 pickle.dump(alarms, pkl_file)
                 pkl_file.close()
+
+            if with_operator_messages:
+                query = om_query_builder(begin_time, end_time)
+                w.execute(query)
+                operator_messages = w.create_operator_messages_record()
+            else:
+                operator_messages = None
         except WinCCException as e:
             print(e)
             print(traceback.format_exc())
@@ -336,7 +342,8 @@ def do_alarm_report(begin_time, end_time, host, database='',
         pkl_file = open('alarms.pkl', 'rb')
         alarms = pickle.load(pkl_file)
         pkl_file.close()
-    generate_alarms_report(alarms, begin_time, end_time, host_desc, '')
+    generate_alarms_report(alarms, begin_time, end_time, host_desc, '',
+                           operator_messages=operator_messages)
 
 
 def do_batch_alarm_report(begin_day, end_day, host_address, database,
@@ -348,14 +355,20 @@ def do_batch_alarm_report(begin_day, end_day, host_address, database,
         # Articles/2014_multiprocessing_intro.html
         num_cores = multiprocessing.cpu_count()
         Parallel(n_jobs=num_cores)(delayed(do_alarm_report)
-                                   (date_to_str(day), date_to_str(day + timedelta(timestep)), host_address, database, host_desc=host_desc)
+                                   (date_to_str(day),
+                                    date_to_str(day + timedelta(timestep)),
+                                    host_address, database,
+                                    host_desc=host_desc,
+                                    with_operator_messages=True)
                                    for day in daterange(dt_begin_day, dt_end_day))
     else:
         for day in daterange(dt_begin_day, dt_end_day):
             logging.info('Trying to generate report for %s - %s.',
                          begin_day, end_day)
-            do_alarm_report(date_to_str(day), date_to_str(day + timedelta(timestep)),
-                            host_address, database, host_desc=host_desc)
+            do_alarm_report(date_to_str(day),
+                            date_to_str(day + timedelta(timestep)),
+                            host_address, database, host_desc=host_desc,
+                            with_operator_messages=True)
 
 
 def do_alarm_report_monthly(begin_day, host_address, database,
