@@ -350,12 +350,14 @@ def alarm_report2(begin_day, end_day, timestep):
 
 
 @cli.command()
-def parameters():
+@click.option('--filter-tag', '-ft', help='Filter parameter tag')
+@click.option('--filter-name', '-fn', help='Filter parameter name.')
+def parameters(filter_tag, filter_name):
     """Connect to host and retrieve parameter list."""
     mssql_conn = mssql(host_info.address,
                        strip_R_from_db_name(host_info.database))
     mssql_conn.connect()
-    params = mssql_conn.create_parameter_record()
+    params = mssql_conn.create_parameter_record(filter_tag, filter_name)
     mssql_conn.close()
     print(params)
 

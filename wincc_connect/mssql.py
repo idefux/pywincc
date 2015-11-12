@@ -92,13 +92,23 @@ class mssql():
             return [rec[0] for rec in self.fetchall()]
         return None
 
-    def create_parameter_record(self):
+    def create_parameter_record(self, filter_tag='', filter_name=''):
         """This is VAS only.
         It will not unless you have a parameter system same like ours.
         """
-        query = "SELECT * FROM SYS_TABLE_P ORDER BY PID;"
+        query = "SELECT * FROM SYS_TABLE_P"
+        if filter_tag and filter_name:
+            query += " WHERE Tag LIKE '%{0}% AND \
+            ucText LIKE '%{1}%'".format(filter_tag, filter_name)
+        elif filter_tag:
+            query += " WHERE Tag LIKE '%{0}%'".format(filter_tag)
+        elif filter_name:
+            query += " WHERE ucText LIKE '%{0}%'".format(filter_name)
+        query += " ORDER BY PID;"
+        logging.debug("Query: %s", query)
         self.execute(query)
         if self.rowcount():
+            logging.debug("Found %s matching parameters", self.rowcount())
             params = ParameterRecord()
             for rec in self.fetchall():
                 params.push(Parameter(rec['PID'], rec['Tag'], rec['ucText'],
