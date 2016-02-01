@@ -191,16 +191,18 @@ def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot):
               help="Don't actually query the db. Just show what you would do.")
 @click.option('--state', default='', type=click.STRING,
               help="State condition e.g. '=2' or '>1'")
+@click.option('--priority', default='', type=click.STRING,
+              help="Priority 'WARNING', 'ERROR_DAY', 'ERROR_NOW', 'STOP_ALL'")
 @click.option('--report', '-r', default=False, is_flag=True,
               help="Print html alarm report")
 @click.option('--report-hostname', '-rh', default='',
               help="Host description to be printed on report.")
-def alarms(begin_time, end_time, text, utc, show, state,
+def alarms(begin_time, end_time, text, utc, show, state, priority,
            report, report_hostname):
     """Read alarms from given host in given time."""
     query = alarm_query_builder(eval_datetime(begin_time),
                                 eval_datetime(end_time),
-                                text, utc, state)
+                                text, utc, state, priority)
 
     if show:
         print(query)

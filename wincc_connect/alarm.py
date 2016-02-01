@@ -113,7 +113,19 @@ class AlarmRecord():
                 'sum': self.count_come()}
 
 
-def alarm_query_builder(begin_time, end_time, msg_text='', utc=False, state=''):
+def alarm_state_as_text(alarm_state):
+    """Translate Integer alarm state to text.
+    Return integer cast to string of state unknown.
+    COME, GO, ACK, GACK.
+    """
+    state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK ', 16: 'GACK'}
+    if alarm_state in state_dict:
+        return state_dict[alarm_state]
+    else:
+        return str(alarm_state)
+
+
+def alarm_query_builder(begin_time, end_time, msg_text='', utc=False, state='', priority=''):
     """Build wincc alarm query string
 
     >>> alarm_query_builder("2015-08-24 10:07:48", "2015-08-24 10:08:12", '', False, '')
@@ -155,6 +167,9 @@ def alarm_query_builder(begin_time, end_time, msg_text='', utc=False, state=''):
 
     if state != '':
         query += u" AND State {state_condition}".format(state_condition=state)
+
+    if priority != '':
+        query += u" AND Typename LIKE '%{priority}%'".format(priority=priority)
 
     return query
 
