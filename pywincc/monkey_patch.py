@@ -1,3 +1,11 @@
+"""
+This is a monkey patch to fix a WinCCOLEDBPRovider and adodbapi issue.
+The WinCC Provider does not provide some information the adodbapi expects.
+This patch was accepted by the adodbapi maintainer and is now in the
+development branch.
+http://sourceforge.net/p/adodbapi/code/ci/fe567730985dd27df1ad8708da96c3d6a75527e9/
+Once a new adodbapi version is released this patch may be omitted.
+"""
 import adodbapi
 from adodbapi.adodbapi import make_COM_connecter, getIndexedValue,\
      defaultCursorLocation, defaultIsolationLevel
