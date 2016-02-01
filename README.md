@@ -30,6 +30,8 @@ HKEY_LOCAL_MACHINE - SOFTWARE - Classes - CLSID - Some string (e.g. {3EE5243C-37
 Now, at this key, add a DWORD value with name "OLEDB_SERVICES" and value 0xffffffff.
 See screenshot 'regedit_oledb_services.png'.
 
+![Win Registry modifications for WINCCOLEDBProvider.1](regedit_oledb_services.png)
+
 ### Remote machine
 1. WinCC 7.0 (previous or newer versions may also work)
 2. VPN connection to remote machine (e.g. OpenVPN)
