@@ -5,3 +5,8 @@ docs/_build/
 *.pkl
 reports/_out/*.html
 old/
+*.egg-info
+venv2/
+.settings
+*.sav
+profile

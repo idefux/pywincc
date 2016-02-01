@@ -1,4 +1,4 @@
-WinCC Connect
+pywincc
 =======================
 
 This python module provides access to the Microsoft SQL Server 2005 database underlying Siemens WinCC.

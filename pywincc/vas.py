@@ -1,5 +1,5 @@
 """"
-This module holds extensions to wincc_connect that are specific to
+This module holds extensions to pywincc that are specific to
 company VAS Energy Systems.
 
 This is parameter handling and calling of specific tag names.
