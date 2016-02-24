@@ -1,5 +1,5 @@
 from collections import namedtuple
-from .helper import local_time_to_utc, datetime_to_str_without_ms,\
+from helper import local_time_to_utc, datetime_to_str_without_ms,\
     str_to_datetime
 
 Alarm = namedtuple('Alarm',
@@ -125,7 +125,7 @@ def alarm_state_as_text(alarm_state):
         return str(alarm_state)
 
 
-def alarm_query_builder(begin_time, end_time, msg_text='', utc=False, state='', priority=''):
+def alarm_query_builder(begin_time, end_time, msg_text='', utc=False, state='', priority='', priority2=''):
     """Build wincc alarm query string
 
     >>> alarm_query_builder("2015-08-24 10:07:48", "2015-08-24 10:08:12", '', False, '')
@@ -168,7 +168,10 @@ def alarm_query_builder(begin_time, end_time, msg_text='', utc=False, state='', 
     if state != '':
         query += u" AND State {state_condition}".format(state_condition=state)
 
-    if priority != '':
+    if priority != '' and priority2 != '':
+        query += u" AND (Typename LIKE '%{prio}%'".format(prio=priority)
+        query += u" OR Typename LIKE '%{prio}%')".format(prio=priority2)
+    elif priority != '':
         query += u" AND Typename LIKE '%{priority}%'".format(priority=priority)
 
     return query
