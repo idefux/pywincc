@@ -11,8 +11,11 @@ class AlarmRecord():
 
     state_dict = {1: 'COME', 2: 'GO  ', 3: 'ACK ', 16: 'GACK'}
 
-    def __init__(self):
-        self.alarms = []
+    def __init__(self, alarms=None):
+        if alarms:
+            self.alarms = alarms
+        else:
+            self.alarms = []
 
     def push(self, alarm):
         """Push a new Alarm to alarms list.
@@ -40,6 +43,7 @@ class AlarmRecord():
         return iter(self.alarms)
 
     def alarm_state_as_text(self, alarm):
+        """Return the alarm state as text e.g. "COME" instead of 1."""
         if alarm.state in self.state_dict:
             state = self.state_dict[alarm.state]
         else:
@@ -111,6 +115,25 @@ class AlarmRecord():
                 'error_now': self.count_come_error_now(),
                 'stop_all': self.count_come_stop_all(),
                 'sum': self.count_come()}
+
+    def filter_by_priority(self, priority):
+        """Return a filtered list of alarms."""
+        return [alarm for alarm in self.alarms if alarm.priority == priority]
+
+    def filter_by_priorities(self, priorities):
+        """Return a filters list of alarms. Expects a list of priorities."""
+        return [alarm for prio in priorities for alarm in self.alarms
+                if alarm.priority == prio]
+
+    def filter_by_state(self, state):
+        """Return a filtered list of alarms."""
+        return [alarm for alarm in self.alarms
+                if self.alarm_state_as_text(alarm) == state]
+
+    def filter_by_states(self, states):
+        """Return a filtered list of alarms. Expects a list of states"""
+        return [alarm for state in states for alarm in self.alarms
+                if self.alarm_state_as_text(alarm) == state]
 
 
 def alarm_state_as_text(alarm_state):

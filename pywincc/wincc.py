@@ -536,7 +536,7 @@ class WinCCHosts():
                 self.hosts = pickle.load(fh)
                 return True
         except IOError:
-            logging.error("Opening file %s failed. Could not load hosts.",
+            logging.warning("Opening file %s failed. Could not load hosts.",
                           self.filename)
             return False
 
