@@ -2,7 +2,7 @@ pywincc
 =======================
 
 This python module provides access to the Microsoft SQL Server 2005 database underlying Siemens WinCC.
-Tested with WinCC 7.0.
+Tested with WinCC 7.0 and 7.3 on Windows 7 32 bit and 64 bit.
 
 ## Functions
 
@@ -36,3 +36,8 @@ See screenshot 'regedit_oledb_services.png'.
 1. WinCC 7.0 (previous or newer versions may also work)
 2. VPN connection to remote machine (e.g. OpenVPN)
 3. Firewall settings to allow connection from remote machine
+
+### Access rights
+The windows user calling the python program must also exist on the remote machine
+and must be part of the SIMATIC WinCC user groups
+(according to WinCC installation manual) for access rights on the WinCC database.
