@@ -146,7 +146,8 @@ def tag(tagid, begin_time, end_time, timestep, mode, utc, show):
               help="Don't actually query the db. Just show what you would do.")
 @click.option('--plot', '-p', default=False, is_flag=True,
               help="Open a window with the plotted data.")
-def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot):
+@click.option('--outfile', '-o', default='', help='Output as given filename (csv)')
+def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot, outfile):
     """Parse user friendly tag query input and assemble wincc tag query"""
     if timestep and not end_time:
         end_time = datetime_to_str_without_ms(datetime.now())
@@ -164,12 +165,17 @@ def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot):
 
         records = w.create_tag_records()
         print("Fetched data in {time}.".format(time=round(toc(), 3)))
-        # print(tags)
-        # tags.plot()
-        for record in records:
-            print(record)
-        if plot:
-            plot_tag_records(records)
+
+        if (outfile != ''):
+            with open(outfile, "w") as f:
+                # print(records.to_csv().encode("UTF-8"))
+                for rec in records:
+                    f.write(rec.to_csv().encode("UTF-8"))
+        else:
+            for record in records:
+                print(record)
+            if plot:
+                plot_tag_records(records)
 
     except Exception as e:
         print(e)
@@ -356,14 +362,19 @@ def alarm_report2(begin_day, end_day, timestep):
 @cli.command()
 @click.option('--filter-tag', '-ft', help='Filter parameter tag')
 @click.option('--filter-name', '-fn', help='Filter parameter name.')
-def parameters(filter_tag, filter_name):
+@click.option('--outfile', '-o', default='', help='Output as given filename (csv)')
+def parameters(filter_tag, filter_name, outfile):
     """Connect to host and retrieve parameter list."""
     mssql_conn = mssql(host_info.address,
                        strip_R_from_db_name(host_info.database))
     mssql_conn.connect()
     params = mssql_conn.create_parameter_record(filter_tag, filter_name)
     mssql_conn.close()
-    print(params)
+    if (outfile != ''):
+        with open(outfile, "w") as f:
+            f.write(params.to_csv().encode("UTF-8"))
+    else:
+        print(params)
 
 
 @cli.command()

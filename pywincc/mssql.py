@@ -111,11 +111,13 @@ class mssql():
             logging.debug("Found %s matching parameters", self.rowcount())
             params = ParameterRecord()
             for rec in self.fetchall():
-                params.push(Parameter(rec['PID'], rec['Tag'], rec['ucText'],
-                                      rec['siValue'], rec['siMin'],
-                                      rec['siMax'], rec['siDef'],
+                params.push(Parameter(rec['ID'], rec['TEXTID'], rec['HELPID'],
+                                      rec['SPSID'], rec['PID'], rec['Tag'],
+                                      rec['ucText'], rec['siValue'],
+                                      rec['siMin'], rec['siMax'], rec['siDef'],
+                                      rec['uiMul'], rec['ucRight'],
                                       rec['ucSection'], rec['ucGroup'],
-                                      rec['ucRight']))
+                                      rec['ucUnit'], rec['ucHelpText']))
             return params
         else:
             return None
