@@ -119,6 +119,14 @@ def utc_to_local(t):
     return utc.astimezone(to_zone)
 
 
+def utc_to_utcx(t, x):
+    """Transform given datetime object from UTC to UTC+x"""
+    from_zone = tz.gettz('UTC')
+    to_zone = tz.gettz('UTC+{}'.format(x))
+    utc = t.replace(tzinfo=from_zone)
+    return utc.astimezone(to_zone)
+
+
 def daterange(start_date, end_date):
     """Iterable for days in given range. end_date is excluded."""
     for n in range(int((end_date - start_date).days)):

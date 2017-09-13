@@ -134,7 +134,7 @@ def tag(tagid, begin_time, end_time, timestep, mode, utc, show):
 @click.option('--end-time', '-e', default='',
               help='Can be absolute (see begin-time) or relative \
               0000-00-01[ 12:00:00[.000]]')
-@click.option('--timestep', '-t', default=0,
+@click.option('--timestep', '-t', default='',
               help='Group result in timestep long sections. Time in seconds.')
 @click.option('--mode', '-m', default='first',
               help="Optional mode. Can be first, last, min, max, avg, sum, \
@@ -147,7 +147,12 @@ def tag(tagid, begin_time, end_time, timestep, mode, utc, show):
 @click.option('--plot', '-p', default=False, is_flag=True,
               help="Open a window with the plotted data.")
 @click.option('--outfile', '-o', default='', help='Output as given filename (csv)')
-def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot, outfile):
+@click.option('--outfile-col-name', '-c', default='', help='Column name when \
+                                                            writing to file.')
+@click.option('--outfile-time-zone', '-z', default='',
+              help='Timezone when writing to file. e.g. +1 for UTC+1')
+def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot, outfile,
+         outfile_col_name, outfile_time_zone):
     """Parse user friendly tag query input and assemble wincc tag query"""
     if timestep and not end_time:
         end_time = datetime_to_str_without_ms(datetime.now())
@@ -163,19 +168,23 @@ def tag2(tagid, begin_time, end_time, timestep, mode, utc, show, plot, outfile):
         w.connect()
         w.execute(query)
 
-        records = w.create_tag_records()
+        records = w.create_tag_records(utc)
         print("Fetched data in {time}.".format(time=round(toc(), 3)))
 
-        if (outfile != ''):
-            with open(outfile, "w") as f:
-                # print(records.to_csv().encode("UTF-8"))
-                for rec in records:
-                    f.write(rec.to_csv().encode("UTF-8"))
+        if records:
+            if (outfile != ''):
+                with open(outfile, "w") as f:
+                    # print(records.to_csv().encode("UTF-8"))
+                    for rec in records:
+                        f.write(rec.to_csv(name=outfile_col_name.encode("UTF-8"),
+                                           tz=outfile_time_zone))
+            else:
+                for record in records:
+                    print(record)
+                if plot:
+                    plot_tag_records(records)
         else:
-            for record in records:
-                print(record)
-            if plot:
-                plot_tag_records(records)
+            logging.warning("No data returned.")
 
     except Exception as e:
         print(e)

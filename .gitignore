@@ -10,3 +10,4 @@ venv2/
 .settings
 *.sav
 profile
+*.csv

@@ -1,6 +1,6 @@
 """ Helper Functions to handle WinCC Tag queries"""
 from .helper import datetime_to_str, str_to_datetime, local_time_to_utc,\
-    utc_to_local, remove_timezone
+    utc_to_local, utc_to_utcx, remove_timezone
 from collections import namedtuple
 
 Tag = namedtuple('Tag', 'time value')
@@ -39,11 +39,19 @@ class TagRecord():
     def __str__(self):
         return unicode(self).encode('utf-8')
 
-    def to_csv(self):
+    def to_csv(self, delimiter=',', name='', tz=''):
         output = ""
+        if name != '':
+            output = u"DateTime{}{}\n".format(delimiter, name)
         for tag in self:
-            output += u"{time};{value}\n".format(time=tag.time,
-                                                 value=tag.value)
+            if not tz:
+                output += u"{time}{delimiter}{value}\n".format(time=tag.time,
+                                                               delimiter=delimiter,
+                                                               value=tag.value)
+            else:
+                output += u"{time}{delimiter}{value}\n".format(time=utc_to_utcx(tag.time, tz),
+                                                               delimiter=delimiter,
+                                                               value=tag.value)
         return output
 
     def plot(self):
@@ -163,8 +171,24 @@ def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):
                  'sum_interpolated': 262,
                  'count_interpolated': 263}
 
+    timestep_dict = {'m': 60, 'min': 60, 'minute': 60,
+                     '1m': 60, '1min': 60, '1minute': 60,
+                     '10m': 600, '10min': 600, '10minutes': 600,
+                     '30m': 1800, '30min': 1800, '30minutes': 1800,
+                     'half_hour': 1800, 'h': 3600, 'hour': 3600,
+                     '1h': 3600, '1hour': 3600,
+                     'd': 86400, 'day': 86400, '1d': 86400, '1day': 86400}
+
+    if timestep:
+        if timestep in timestep_dict:
+            timestep = timestep_dict[timestep]
+        else:
+            timestep = int(timestep)
+
     if mode not in mode_dict:
-        print("Error: {mode} is not a valid mode. Allowed modes are first, last, min, max, avg, sum, count, and every mode with an '_interpolated' appended e.g. first_interpolated").format(mode=mode)
+        print("Error: {mode} is not a valid mode. Allowed modes are first, \
+        last, min, max, avg, sum, count, and every mode with an '_interpolated'\
+         appended e.g. first_interpolated").format(mode=mode)
         return False
 
     mode_num = mode_dict[mode]
@@ -195,7 +219,7 @@ def tag_query_builder(tagids, begin_time, end_time, timestep, mode, utc):
                 dt_end_time = local_time_to_utc(dt_end_time)
             query += ",'{end_time}'".format(end_time=datetime_to_str(dt_end_time))
 
-    if timestep != 0:
+    if timestep:
         query += ",'TIMESTEP={timestep},{mode}'".format(timestep=timestep, mode=mode_num)
 
     return query

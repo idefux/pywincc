@@ -34,6 +34,9 @@ class wincc(mssql):
 
     conn_str = "Provider=%(provider)s;Catalog=%(database)s;\
     Data Source=%(host)s"
+
+    conn_str_test = "Provider=%(provider)s;Catalog=%(database)s;\
+    Data Source=%(host)s;Uid=VASAdmin;Pwd=udu3zsm3"
     provider = 'WinCCOLEDBProvider.1'
 
     def __init__(self, host, database=None):
@@ -75,6 +78,8 @@ class wincc(mssql):
                                          provider=self.provider,
                                          host=self.host,
                                          database=self.database)
+
+            logging.info("Connected.")
 
             os.chdir(curr_dir)
             self.cursor = self.conn.cursor()
@@ -227,7 +232,8 @@ class wincc(mssql):
                 datetime = datetime_to_str(utc_to_local(rec['DateTime']))
                 op = OperatorMessage(datetime, rec['PText1'], rec['PText4'],
                                      rec['PText2'], rec['PText3'],
-                                     rec['Username'])
+                                     rec['Username'], rec['PValue6'],
+                                     rec['PValue5'], rec['PValue7'])
                 operator_messages.push(op)
         return operator_messages
 
@@ -258,7 +264,7 @@ class wincc(mssql):
                 tag_record.push(Tag(datetime, rec['realvalue']))
         return tag_record
 
-    def create_tag_records(self):
+    def create_tag_records(self, utc=False):
         """Fetch tags from cursor and return a list of TagRecord objects.
         Only use this if you queried for multiple tagids.
         """
@@ -270,7 +276,10 @@ class wincc(mssql):
             p_rec += 1
             rec = self.fetchone()
             tag_records[p_rec].tagid = rec['valueid']
-            datetime = utc_to_local(rec['timestamp'])
+            if utc:
+                datetime = rec['timestamp']
+            else:
+                datetime = utc_to_local(rec['timestamp'])
             tag_records[p_rec].push(Tag(datetime, rec['realvalue']))
 
             for rec in self.fetchall():
@@ -278,7 +287,10 @@ class wincc(mssql):
                     tag_records.append(TagRecord())
                     p_rec += 1
                     tag_records[p_rec].tagid = rec['valueid']
-                datetime = utc_to_local(rec['timestamp'])
+                if utc:
+                    datetime = rec['timestamp']
+                else:
+                    datetime = utc_to_local(rec['timestamp'])
                 tag_records[p_rec].push(Tag(datetime, rec['realvalue']))
             return tag_records
         return None
@@ -290,6 +302,17 @@ class wincc(mssql):
                 print("PText2", rec['PText2'])
                 print("PText3", rec['PText3'])
                 print("PText4", rec['PText4'])
+                print("PText5", rec['PText5'])
+                print("PText6", rec['PText6'])
+                print("PText7", rec['PText7'])
+                print("PValue1", rec['PValue1'])
+                print("PValue2", rec['PValue2'])
+                print("PValue3", rec['PValue3'])
+                print("PValue4", rec['PValue4'])
+                print("PValue5", rec['PValue5'])
+                print("PValue6", rec['PValue6'])
+                print("PValue7", rec['PValue7'])
+                print("PValue8", rec['PValue8'])
                 print(datetime_to_str(utc_to_local(rec['DateTime'])),
                       rec['PText1'], rec['PText2'], rec['PText3'],
                       rec['PText4'], rec['Username'])

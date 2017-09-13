@@ -4,7 +4,7 @@
 from .helper import local_time_to_utc, str_to_datetime, datetime_to_str_without_ms
 from collections import namedtuple
 
-OperatorMessage = namedtuple('OperatorMessage', 'datetime parameter parameter_translated old_value new_value username')
+OperatorMessage = namedtuple('OperatorMessage', 'datetime parameter parameter_translated old_value new_value username level pid spsid')
 
 
 class OperatorMessageRecord():
@@ -41,7 +41,7 @@ class OperatorMessageRecord():
 
     def to_html(self):
         html = u"<table>\n"
-        html += u"<tr>\n<th>Datetime</th><th>Parameter</th><th>Old Value</th><th>New Calue</th><th>Username</th>\n</tr>\n"
+        html += u"<tr>\n<th>Datetime</th><th>Parameter</th><th>Old Value</th><th>New Value</th><th>Username</th>\n</tr>\n"
         for om in self.operator_messages:
             html += u"<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>\n".format(om.datetime, self.__get_parameter(om), om.old_value, om.new_value, om.username)
         html += u"</table>\n"
