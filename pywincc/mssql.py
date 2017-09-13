@@ -2,7 +2,8 @@ import adodbapi
 import logging
 import os
 
-from .parameter import ParameterRecord, Parameter
+from alarm_config import AlarmConfig, AlarmConfigRecord
+from parameter import Parameter, ParameterRecord
 import monkey_patch
 
 
@@ -113,12 +114,48 @@ class mssql():
             for rec in self.fetchall():
                 params.push(Parameter(rec['ID'], rec['TEXTID'], rec['HELPID'],
                                       rec['SPSID'], rec['PID'], rec['Tag'],
-                                      rec['ucText'], rec['siValue'],
-                                      rec['siMin'], rec['siMax'], rec['siDef'],
+                                      rec['ucText'], int(rec['siValue']),
+                                      int(rec['siMin']), int(rec['siMax']), int(rec['siDef']),
                                       rec['uiMul'], rec['ucRight'],
                                       rec['ucSection'], rec['ucGroup'],
-                                      rec['ucUnit'], rec['ucHelpText']))
+                                      rec['ucUnit'], rec['ucHelpText'],
+                                      rec['LastUser'], rec['LastAccess'],
+                                      rec['UpdateEnable'], rec['ChangedByPLC'],
+                                      rec['ChangedByHMI']))
             return params
+        else:
+            return None
+
+    def create_alarmconfig_record(self, filter_tag='', filter_name=''):
+        """This is VAS only.
+        It will not work unless you have an alarm system like ours.
+        """
+        query = "SELECT * FROM SYS_TABLE_A"
+        if filter_tag and filter_name:
+            query += " WHERE Tag LIKE '%{0}% AND \
+            ucText LIKE '%{1}%'".format(filter_tag, filter_name)
+        elif filter_tag:
+            query += " WHERE Tag LIKE '%{0}%'".format(filter_tag)
+        elif filter_name:
+            query += " WHERE ucText LIKE '%{0}%'".format(filter_name)
+        query += " ORDER BY AID;"
+        logging.debug("Query: %s", query)
+        self.execute(query)
+        if self.rowcount():
+            logging.debug("Found %s matching parameters", self.rowcount())
+            alarmconfigrecord = AlarmConfigRecord()
+            for rec in self.fetchall():
+                alarmconfigrecord.push(AlarmConfig(rec['ID'], rec['TEXTID'], rec['HELPID'],
+                                      rec['SPSID'], rec['AID'], rec['Tag'],
+                                      rec['ucText'], rec['ucEMSR0'], rec['ucEMSR1'],
+                                      rec['boIn'], rec['boAlarmOut'], rec['boSingleAck'],
+                                      rec['ucAlarmPrior'], rec['ucCfg'], rec['ucGroup'],
+                                      int(rec['ulCoun']), int(rec['ulAlarmMaxCoun']),
+                                      int(rec['ucRights']), rec['ucHelpText'],
+                                      rec['LastUser'], rec['LastAccess'],
+                                      rec['UpdateEnable'], rec['ChangedByPLC'],
+                                      rec['ChangedByHMI']))
+            return alarmconfigrecord
         else:
             return None
 

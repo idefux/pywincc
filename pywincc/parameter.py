@@ -1,10 +1,10 @@
 """Handle VAS S7 parameters"""
 
 from collections import namedtuple
+from helper import datetime_to_str_slashes
 
 Parameter = namedtuple('Parameter',
-                       'id textid helpid spsid pid tag text act min max default mul right sec grp unit helptext')
-
+                       'id textid helpid spsid pid tag text act min max default mul right sec grp unit helptext lastuser lastaccess updateenable changedbyplc changedbyhmi')
 
 class ParameterRecord():
 
@@ -44,7 +44,21 @@ class ParameterRecord():
             csv += u"{p.min};{p.max};{p.default};{p.mul};".format(p=parameter)
             csv += u"{p.sec};{p.grp};{p.right}\n".format(p=parameter)
         return csv
-        
+
+    def to_csv_ewald(self, print_headers=True):
+        csv = u""
+        if print_headers:
+            csv += u"ID;TEXTID;HELPID;SPSID;PID;Tag;ucText;siValue;siMin;siMax\
+                     ;siDef;uiMul;ucRight;ucSection;ucGroup;ucUnit;ucHelpText\
+                     ;LastUser;LastAccess;UpdateEnable;ChangedByPLC;ChangedByHMI\n"
+        for parameter in self:
+            csv += u"{p.id};{p.textid};{p.helpid};{p.spsid};{p.pid};{p.tag};{p.text};".format(p=parameter)
+            csv += u"{p.act};{p.min};{p.max};{p.default};{p.mul};".format(p=parameter)
+            csv += u"{p.right};{p.sec};{p.grp};{p.unit};{p.helptext};".format(p=parameter)
+            #csv += u"{p.lastuser};{lastaccess};{p.updateenable};{p.changedbyplc};{p.changedbyhmi}\n".format(p=parameter, lastaccess=datetime_to_str_slashes(parameter.lastaccess))
+            csv += u"{p.lastuser};{p.lastaccess};{p.updateenable};{p.changedbyplc};{p.changedbyhmi}\n".format(p=parameter)
+        return csv
+
     def max_length_text(self):
         """Return the text length of longest parameter text."""
         p = max(self, key=lambda x: len(x.text))

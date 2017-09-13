@@ -43,6 +43,10 @@ def datetime_to_str_underscores(dt):
     return dt.strftime('%Y_%m_%d_%H_%M_%S')
 
 
+def datetime_to_str_slashes(dt):
+    """Convert to e.g. "2015_01_21_10_22_10"""
+    return dt.strftime('%d/%m/%Y %H:%M:%S')
+
 def datetime_is_date(dt):
     """Return True if datetime object is a date (H, M, S == 0).
 

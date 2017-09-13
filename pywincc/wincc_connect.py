@@ -381,9 +381,27 @@ def parameters(filter_tag, filter_name, outfile):
     mssql_conn.close()
     if (outfile != ''):
         with open(outfile, "w") as f:
-            f.write(params.to_csv().encode("UTF-8"))
+            f.write(params.to_csv_ewald().encode("UTF-8"))
     else:
         print(params)
+
+
+@cli.command()
+@click.option('--filter-tag', '-ft', help='Filter alarm tag')
+@click.option('--filter-name', '-fn', help='Filter alarm name.')
+@click.option('--outfile', '-o', default='', help='Output as given filename (csv)')
+def alarmconfig(filter_tag, filter_name, outfile):
+    """Connect to host and retrieve parameter list."""
+    mssql_conn = mssql(host_info.address,
+                       strip_R_from_db_name(host_info.database))
+    mssql_conn.connect()
+    alarmconfig = mssql_conn.create_alarmconfig_record(filter_tag, filter_name)
+    mssql_conn.close()
+    if (outfile != ''):
+        with open(outfile, "w") as f:
+            f.write(alarmconfig.to_csv().encode("UTF-8"))
+    else:
+        print(alarmconfig)
 
 
 @cli.command()
